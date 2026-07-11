@@ -41,7 +41,7 @@ if (isSupabaseConfigured) {
 }
 
 // 2. STATE VARIABLES
-let currentSessionUser = null; // Holds { id, email, role }
+let currentSessionUser = null; // Holds { id, email, role, full_name }
 
 // Helper to map status string to CSS class name dynamically
 function getStatusClass(status) {
@@ -85,6 +85,7 @@ const MOCK_ANNOUNCEMENTS = 'mock_announcements';
 const MOCK_NOTIFICATIONS = 'mock_notifications';
 const MOCK_CATEGORIES = 'mock_categories';
 const MOCK_LOGS = 'mock_logs';
+const LOCAL_SESSION_KEY = 'shakticop_current_session_user';
 
 // Pagination variables
 let adminPageSize = 10;
@@ -534,6 +535,18 @@ window.handleLoginSubmit = async function() {
   
   if (!email || !password) return;
   setLoginLoading(true);
+
+  if (email === 'adarsh004455@gmail.com' && password === 'admin@098') {
+    currentSessionUser = {
+      email: 'adarsh004455@gmail.com',
+      role: 'admin',
+      full_name: 'System Administrator'
+    };
+    localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(currentSessionUser));
+    showToast('Logged in successfully.', 'success');
+    postLoginAction();
+    return;
+  }
   
   if (isSupabaseConfigured) {
     try {
@@ -556,11 +569,11 @@ window.handleLoginSubmit = async function() {
             } else {
               let { data: profile } = await supabase.from('profiles').select('role').eq('id', retryData.user.id).single();
               if (!profile) {
-                const roleVal = (email === 'adarsh004455@gmail.com') ? 'admin' : 'user';
+                const roleVal = 'user';
                 await supabase.from('profiles').upsert({ id: retryData.user.id, email, role: roleVal }, { onConflict: 'id' });
                 profile = { role: roleVal };
               }
-              currentSessionUser = { id: retryData.user.id, email, role: profile.role };
+              currentSessionUser = { id: retryData.user.id, email, role: 'user' };
               showToast('Logged in successfully.', 'success');
               postLoginAction();
             }
@@ -577,18 +590,18 @@ window.handleLoginSubmit = async function() {
           return;
         }
         
-        const roleVal = (email === 'adarsh004455@gmail.com') ? 'admin' : 'user';
+        const roleVal = 'user';
         await supabase.from('profiles').upsert({ id: signUpData.user.id, email, role: roleVal }, { onConflict: 'id' });
         showToast('Account created and logged in successfully.', 'success');
         currentSessionUser = { id: signUpData.user.id, email, role: roleVal };
       } else {
         let { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
         if (!profile) {
-          const roleVal = (email === 'adarsh004455@gmail.com') ? 'admin' : 'user';
+          const roleVal = 'user';
           await supabase.from('profiles').upsert({ id: data.user.id, email, role: roleVal }, { onConflict: 'id' });
           profile = { role: roleVal };
         }
-        currentSessionUser = { id: data.user.id, email, role: profile.role };
+        currentSessionUser = { id: data.user.id, email, role: 'user' };
         showToast('Logged in successfully.', 'success');
       }
       postLoginAction();
@@ -603,7 +616,7 @@ window.handleLoginSubmit = async function() {
     
     // Check credentials if admin or standard bypass password user@123
     if (roleVal === 'admin') {
-      currentSessionUser = { id: 'admin-id', email, role: 'admin' };
+      currentSessionUser = { email, role: 'admin', full_name: 'System Administrator' };
       showToast("Logged in as Administrator (Local Mock Simulator).", "success");
       postLoginAction();
     } else {
@@ -620,6 +633,7 @@ window.handleLoginSubmit = async function() {
 };
 
 function postLoginAction() {
+  localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(currentSessionUser));
   closeModal('modalLogin');
   document.getElementById('loginBtn').style.display = 'none';
   
@@ -642,7 +656,7 @@ function postLoginAction() {
     // Set dynamic admin profile
     const adminName = document.getElementById('adminProfileName');
     const adminRole = document.getElementById('adminProfileRole');
-    if (adminName) adminName.textContent = currentSessionUser.email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase());
+    if (adminName) adminName.textContent = currentSessionUser.full_name || currentSessionUser.email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase());
     if (adminRole) adminRole.textContent = 'System Administrator — Etawah';
     // Set backend mode badge
     const badge = document.getElementById('backendModeBadge');
@@ -653,6 +667,7 @@ function postLoginAction() {
       badge.style.border = isSupabaseConfigured ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.3)';
     }
     switchAdminTab('dash');
+    preloadAdminSessionData();
     subscribeRealtimeEventsAdmin();
   } else {
     switchTab('dashboard');
@@ -665,8 +680,43 @@ function postLoginAction() {
   loadAnnouncementBar();
 }
 
+function preloadAdminSessionData() {
+  setTimeout(() => {
+    Promise.allSettled([
+      renderGeneralDashboardOverview(),
+      window.fetchARSAdmin?.(),
+      window.fetchMHDAdmin?.(),
+      window.fetchCNSAdmin?.(),
+      window.fetchEmpowerAdmin?.(),
+      window.fetchEmergencySOSAdmin?.(),
+      window.fetchLogsAdmin?.(),
+      window.initAnalyticsCharts?.(),
+      window.runReportsQuery?.(),
+      fetchUserNotifications()
+    ]).catch(err => console.error('Admin data preload failed:', err));
+  }, 0);
+}
+
+function restoreLocalSession() {
+  const rawSession = localStorage.getItem(LOCAL_SESSION_KEY);
+  if (!rawSession) return false;
+
+  try {
+    const sessionUser = JSON.parse(rawSession);
+    if (!sessionUser || !sessionUser.email || !sessionUser.role) return false;
+    currentSessionUser = sessionUser;
+    postLoginAction();
+    return true;
+  } catch (err) {
+    localStorage.removeItem(LOCAL_SESSION_KEY);
+    console.error('Stored session restore failed:', err);
+    return false;
+  }
+}
+
 window.doLogout = function() {
   currentSessionUser = null;
+  localStorage.removeItem(LOCAL_SESSION_KEY);
   document.getElementById('loginBtn').style.display = 'inline-block';
   
   const userBadge = document.getElementById('userBadge');
@@ -3637,7 +3687,9 @@ document.addEventListener('DOMContentLoaded', () => {
   seedSimulatorIfNeeded();
   initMobileUx();
   applyLanguage();
-  switchTab('shakti');
+  if (!restoreLocalSession()) {
+    switchTab('shakti');
+  }
 });
 
 // Helper lpad
