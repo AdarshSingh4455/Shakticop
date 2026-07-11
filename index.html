@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ShaktiCop — Women Safety &amp; Empowerment Portal</title>
+  <link rel="icon" type="image/png" href="assets/up-police-logo.png"/>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  
+  <!-- CSS Stylesheet -->
+  <link rel="preload" href="assets/up-police-logo.png" as="image" type="image/png"/>
+  <link rel="stylesheet" href="index.css"/>
+  
+  <!-- External CDN Dependencies -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<!-- MAIN CITIZEN PUBLIC SITE WRAPPER -->
+<div id="publicSiteWrapper" style="width:100%; min-height:100vh;">
+  
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <a href="#" class="logo logo-wrap" title="Uttar Pradesh Police" aria-label="Uttar Pradesh Police home" onclick="switchTab('shakti');return false;">
+        <div class="logo-icon logo-emblem">
+          <img class="up-police-logo" src="assets/up-police-logo.png" alt="Official Uttar Pradesh Police logo" width="72" height="72" decoding="async" onerror="handleLogoError(this)"/>
+          <span class="logo-fallback" hidden>
+            <svg viewBox="0 0 64 64" role="img" aria-label="Uttar Pradesh Police logo placeholder" focusable="false">
+              <circle cx="32" cy="32" r="29" fill="#ffffff" stroke="#d4a017" stroke-width="3"/>
+              <path d="M32 10l16 7v12c0 11-7 19-16 24-9-5-16-13-16-24V17l16-7z" fill="#111827"/>
+              <path d="M24 30h16M28 23h8M25 38h14" stroke="#f0c040" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </span>
+        </div>
+        <div class="logo-text">
+          <div class="t1" id="logo-t1">ShaktiCop</div>
+          <div class="t2" id="logo-t2">WOMEN SAFETY &amp; EMPOWERMENT HUB</div>
+        </div>
+      </a>
+      <nav>
+        <a href="#shakti" id="nav-shakti" class="active" onclick="switchTab('shakti');return false;">Mission Shakti</a>
+        <a href="#police" id="nav-police" onclick="switchTab('police');return false;">Police Services</a>
+        <a href="#dashboard" id="nav-dashboard" style="display:none;" onclick="switchTab('dashboard');return false;">My Dashboard</a>
+        <a href="https://uppolice.gov.in" target="_blank">Portal</a>
+      </nav>
+      <div class="header-actions">
+        <button class="header-lang" id="langToggleBtn" onclick="window.toggleLanguage()">🌐 हिन्दी</button>
+        <div class="user-badge" id="userBadge" style="display:none;">👤 <span id="userBadgeText"></span> <button onclick="doLogout()" style="background:rgba(255,255,255,.2);border:none;border-radius:4px;color:#fff;cursor:pointer;padding:2px 6px;font-size:10px;margin-left:4px">Logout</button></div>
+        <button class="header-login" id="loginBtn" onclick="openModal('modalLogin')">🔐 <span>Login</span></button>
+        <button class="header-sos" onclick="window.location.href='tel:112'">SOS: 112</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <div class="hero" id="publicHero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="hero-badge">🌸 Mission Shakti 5.0 — Government of Uttar Pradesh</div>
+      <h1>Your Safety. Your Rights. <span>Your Shakti.</span></h1>
+      <p>Mission Shakti services, women helplines, counselling, shelter homes and police assistance — all in one place.</p>
+      <div class="hero-search-wrap">
+        <input type="text" id="heroSearch" placeholder="Search Mission Shakti services..." oninput="handleSearch(this.value)"/>
+        <button class="hero-search-btn">&#128269;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANNOUNCEMENT BAR (realtime from DB) -->
+  <div id="announcementBar" style="background:linear-gradient(90deg, #1e0a26, #0b1437); border-bottom:1px solid rgba(230,73,128,0.3); padding:8px 0; display:none;">
+    <div style="max-width:1280px; margin:0 auto; padding:0 20px; display:flex; align-items:center; gap:10px; overflow:hidden;">
+      <span style="background:var(--pink); color:#fff; font-size:9px; font-weight:700; padding:2px 8px; border-radius:20px; white-space:nowrap;">LIVE</span>
+      <span id="announcementText" style="color:#e2d8f5; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Loading announcements...</span>
+    </div>
+  </div>
+
+  <!-- EMERGENCY BAR -->
+  <div class="emergency-bar" id="publicEmergencyBar">
+    <div class="emergency-inner">
+      <div class="emer-label">Emergency Helplines</div>
+      <div class="emer-chips" id="emerChips"></div>
+    </div>
+  </div>
+
+  <!-- MAIN WRAPPER FOR PUBLIC SECTIONS -->
+  <div class="main-wrap" id="publicMainWrap">
+    <div class="sidebar">
+      <div class="sidebar-title">Quick Navigation</div>
+      <div id="sidebarLinks"></div>
+    </div>
+    <div class="content">
+      <div class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('shakti')" id="tab-shakti">Mission Shakti <span class="tab-badge" id="badge-shakti">18</span></button>
+        <button class="tab-btn" onclick="switchTab('police')" id="tab-police">Police Services <span class="tab-badge" id="badge-police">14</span></button>
+      </div>
+      <div id="mainContent"></div>
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       USER PANEL DASHBOARD
+       ========================================== -->
+  <div class="main-wrap" id="userDashboard" style="display:none; flex-direction:column; gap:20px;">
+    <div class="dashboard-stats" style="margin-top:0;">
+      <div class="dash-stat-card" style="background:var(--gradient-primary)">
+        <div class="dash-num" id="u-total-num">0</div>
+        <div class="dash-lbl">My Total Requests</div>
+      </div>
+      <div class="dash-stat-card" style="background:#5f3dc4">
+        <div class="dash-num" id="u-pending-num">0</div>
+        <div class="dash-lbl">Active / Pending</div>
+      </div>
+      <div class="dash-stat-card" style="background:#16a34a">
+        <div class="dash-num" id="u-resolved-num">0</div>
+        <div class="dash-lbl">Resolved Cases</div>
+      </div>
+    </div>
+
+    <!-- Citizen Sub-navigation Tabs -->
+    <div class="user-dash-tabs">
+      <button class="user-tab-btn active" onclick="switchUserDashboardTab('complaints')">📋 Complaints</button>
+      <button class="user-tab-btn" onclick="switchUserDashboardTab('ars')">🚔 Anti-Romeo</button>
+      <button class="user-tab-btn" onclick="switchUserDashboardTab('mhd')">👮 Mahila HelpDesk</button>
+      <button class="user-tab-btn" onclick="switchUserDashboardTab('cns')">💬 Counselling</button>
+      <button class="user-tab-btn" onclick="switchUserDashboardTab('emp')">🎓 JSS Programs</button>
+      <button class="user-tab-btn" onclick="switchUserDashboardTab('sos')">🆘 SOS Triggers</button>
+    </div>
+
+    <!-- Profile Card (shown only when logged in) -->
+    <div id="citizenProfileCard" style="background:linear-gradient(135deg, var(--navy) 0%, #1e0a26 100%); border:1px solid rgba(230,73,128,0.2); border-radius:12px; padding:16px 20px; display:none; margin-bottom:0; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:44px; height:44px; background:rgba(230,73,128,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px;">👤</div>
+        <div>
+          <div style="color:#fff; font-weight:700; font-size:14px;" id="citizenProfileEmail">citizen@email.com</div>
+          <div style="color:#a3b1cc; font-size:11px;">Registered Citizen — Etawah District</div>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 16px;">
+          <div style="color:#e64980; font-weight:800; font-size:20px;" id="u-total-num">0</div>
+          <div style="color:#a3b1cc; font-size:10px;">Total</div>
+        </div>
+        <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 16px;">
+          <div style="color:#f59e0b; font-weight:800; font-size:20px;" id="u-pending-num">0</div>
+          <div style="color:#a3b1cc; font-size:10px;">Active</div>
+        </div>
+        <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 16px;">
+          <div style="color:#10b981; font-weight:800; font-size:20px;" id="u-resolved-num">0</div>
+          <div style="color:#a3b1cc; font-size:10px;">Resolved</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="user-dash-container">
+      <!-- Left Column: Unified Searchable Data Table -->
+      <div>
+        <div class="user-dash-section">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+            <div class="user-dash-title" id="userDashboardTabTitle">📋 My Submitted Complaints</div>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="uSearchQuery" placeholder="Search ID, remarks..." class="admin-input" style="max-width:200px; background:#fff; color:#000; border:1px solid #cbd5e1;" oninput="fetchUserDashboardData()"/>
+              <select id="uFilterStatus" class="admin-select" style="max-width:140px; background:#fff; color:#000; border:1px solid #cbd5e1;" onchange="fetchUserDashboardData()">
+                <option value="">All Status</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="admin-table-wrap">
+            <table class="citizen-table">
+              <thead>
+                <tr id="userDashboardTableHeader">
+                  <!-- Columns change dynamically based on active tab -->
+                </tr>
+              </thead>
+              <tbody id="userDashboardTableBody">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="admin-pagination" id="userDashboardPagination"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Timeline Tracking & Notifications -->
+      <div>
+        <div class="user-dash-section">
+          <div class="user-dash-title">🔍 Realtime Tracking Timeline</div>
+          <div class="modal-field" style="display:flex; gap:8px; margin-bottom:0;">
+            <input type="text" id="trackInputId" placeholder="Enter ID (e.g. ARS-2026-000101)" style="flex:1; background:#fafafa; border:1.5px solid var(--border);"/>
+            <button class="admin-btn primary" onclick="trackRequestById()" style="padding:10px 16px;">Track</button>
+          </div>
+          <div id="trackResultArea" style="display:none; margin-top:16px;">
+            <!-- Render timeline details -->
+          </div>
+        </div>
+
+        <div class="user-dash-section">
+          <div class="user-dash-title">🔔 My Notifications Center</div>
+          <div id="userNotificationsList" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+            <!-- Render notifications -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="t1">ShaktiCop</div>
+          <p>Uttar Pradesh Police — Women Safety &amp; Empowerment Hub.<br>Mission Shakti 5.0 — 2025-26<br>Suraksha Aapki — Sankalp Hamara</p>
+        </div>
+        <div class="footer-col">
+          <h4>Quick Links</h4>
+          <a href="https://uppolice.gov.in" target="_blank">UP Police Portal</a>
+          <a href="https://cybercrime.gov.in" target="_blank">Cyber Crime Portal</a>
+          <a href="https://cctnsup.gov.in" target="_blank">e-FIR Portal</a>
+          <a href="https://jansunwai.up.nic.in" target="_blank">Jansunwai</a>
+          <a href="https://mksy.up.gov.in" target="_blank">Kanya Sumangala</a>
+        </div>
+        <div class="footer-col">
+          <h4>Important Numbers</h4>
+          <a href="tel:112">Police — 112</a>
+          <a href="tel:1090">Women — 1090</a>
+          <a href="tel:1930">Cyber Fraud — 1930</a>
+          <a href="tel:108">Ambulance — 108</a>
+          <a href="tel:1098">Child — 1098</a>
+          <a href="tel:101">Fire — 101</a>
+          <a href="tel:1076">CM Office — 1076</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div>2026 Government of Uttar Pradesh — <span>ShaktiCop</span></div>
+        <div>Designed for women's safety &amp; empowerment</div>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ==========================================
+     ADMIN PANEL DARK WORKSPACE
+     ========================================== -->
+<div id="adminWorkspace" class="admin-theme" style="display:none; width:100%; min-height:100vh;">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div class="admin-brand">
+      <div class="admin-brand-icon">🚨</div>
+      <div class="admin-brand-name">ShaktiCop Admin</div>
+    </div>
+    <ul class="admin-menu">
+      <li class="admin-menu-item active" id="menu-dash"><a href="#" onclick="switchAdminTab('dash');return false;">📊 Dashboard</a></li>
+      <li class="admin-menu-item" id="menu-ars"><a href="#" onclick="switchAdminTab('ars');return false;">🚔 Anti Romeo Squad</a></li>
+      <li class="admin-menu-item" id="menu-mhd"><a href="#" onclick="switchAdminTab('mhd');return false;">👮 Mahila Help Desk</a></li>
+      <li class="admin-menu-item" id="menu-counsel"><a href="#" onclick="switchAdminTab('counsel');return false;">💬 Counselling</a></li>
+      <li class="admin-menu-item" id="menu-empower"><a href="#" onclick="switchAdminTab('empower');return false;">💪 Women Empowerment</a></li>
+      <li class="admin-menu-item" id="menu-officers"><a href="#" onclick="switchAdminTab('officers');return false;">👮 Female Officers</a></li>
+      <li class="admin-menu-item" id="menu-emergency"><a href="#" onclick="switchAdminTab('emergency');return false;">🚨 Emergency Requests</a></li>
+      <li class="admin-menu-item" id="menu-contacts"><a href="#" onclick="switchAdminTab('contacts');return false;">📞 Emergency Contacts</a></li>
+      <li class="admin-menu-item" id="menu-logs"><a href="#" onclick="switchAdminTab('logs');return false;">📜 Activity Logs</a></li>
+      <li class="admin-menu-item" id="menu-analytics"><a href="#" onclick="switchAdminTab('analytics');return false;">📈 Analytics</a></li>
+      <li class="admin-menu-item" id="menu-reports"><a href="#" onclick="switchAdminTab('reports');return false;">📄 Reports &amp; Exports</a></li>
+      <li class="admin-menu-item" style="margin-top:auto;"><a href="#" onclick="doLogout();return false;">🚪 Logout</a></li>
+    </ul>
+  </aside>
+
+  <!-- Main Workspace Area -->
+  <main class="admin-main">
+    <header class="admin-topbar">
+      <div class="admin-topbar-title" id="adminActiveTabTitle">Admin Dashboard</div>
+      <div class="admin-topbar-actions">
+        <div id="backendModeBadge" style="font-size:10px; padding:4px 10px; border-radius:20px; font-weight:600; background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3);">⚠️ LocalStorage Mode</div>
+        <div class="admin-profile-info">
+          <div class="admin-avatar">A</div>
+          <div>
+            <div style="font-weight:700; color:#fff; font-size:13px;" id="adminProfileName">Admin User</div>
+            <div style="font-size:11px; color:#a3b1cc;" id="adminProfileRole">System Administrator</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="admin-body">
+      <!-- 1. GENERAL OVERVIEW DASHBOARD -->
+      <div class="admin-subview" id="admin-view-dash">
+        <div class="admin-grid-4">
+          <div class="admin-stat-card">
+            <div class="admin-stat-info">
+              <div class="admin-stat-label">Total Incoming Reports</div>
+              <div class="admin-stat-num" id="a-stat-total">0</div>
+            </div>
+            <div class="admin-stat-icon">📋</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-info">
+              <div class="admin-stat-label">Active / Pending Review</div>
+              <div class="admin-stat-num" id="a-stat-pending">0</div>
+            </div>
+            <div class="admin-stat-icon" style="color:#f59e0b">⏳</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-info">
+              <div class="admin-stat-label">Active SOS Alerts</div>
+              <div class="admin-stat-num" id="a-stat-sos" style="color:var(--red);">0</div>
+            </div>
+            <div class="admin-stat-icon" style="color:var(--red);">🆘</div>
+          </div>
+          <div class="admin-stat-card">
+            <div class="admin-stat-info">
+              <div class="admin-stat-label">Overall Resolution Rate</div>
+              <div class="admin-stat-num" id="a-stat-rate">0%</div>
+            </div>
+            <div class="admin-stat-icon" style="color:#10b981">📈</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-top:20px;">
+          <div class="admin-chart-box">
+            <div class="admin-chart-title">🚨 Recent Critical Incidents</div>
+            <div class="admin-table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>Tracking ID</th>
+                    <th>Module</th>
+                    <th>Location</th>
+                    <th>Status</th>
+                    <th>Received At</th>
+                  </tr>
+                </thead>
+                <tbody id="adminRecentIncidentsList">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div class="admin-chart-box">
+            <div class="admin-chart-title">👮 Dispatch &amp; Patrol Status</div>
+            <div style="display:flex; flex-direction:column; gap:12px;" id="adminPatrolStatusList">
+              <!-- Officer list with dispatch statuses -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. ANTI ROMEO SQUAD DASHBOARD -->
+      <div class="admin-subview" id="admin-view-ars" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; width:100%; max-width:800px;">
+              <input type="text" id="arsSearchQuery" placeholder="Search ARS ID, Name, Location..." class="admin-input" style="max-width:240px;" oninput="fetchARSAdmin()"/>
+              <select id="arsFilterStatus" class="admin-select" style="max-width:160px;" onchange="fetchARSAdmin()">
+                <option value="">All Statuses</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Pending Review">Pending Review</option>
+                <option value="Officer Assigned">Officer Assigned</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+            </div>
+            <button class="admin-btn primary" onclick="exportARS_CSV()">📥 Export CSV</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Report ID</th>
+                  <th>Citizen Name</th>
+                  <th>Mobile</th>
+                  <th>Location</th>
+                  <th>Assigned Patrol</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="arsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="admin-pagination" id="arsPagination"></div>
+        </div>
+      </div>
+
+      <!-- 3. MAHILA HELP DESK DASHBOARD -->
+      <div class="admin-subview" id="admin-view-mhd" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; width:100%; max-width:800px;">
+              <input type="text" id="mhdSearchQuery" placeholder="Search MHD ID, Name, Station..." class="admin-input" style="max-width:240px;" oninput="fetchMHDAdmin()"/>
+              <select id="mhdFilterStatus" class="admin-select" style="max-width:160px;" onchange="fetchMHDAdmin()">
+                <option value="">All Statuses</option>
+                <option value="Submitted">Submitted</option>
+                <option value="Call Back Requested">Call Back Requested</option>
+                <option value="Officer Assigned">Officer Assigned</option>
+                <option value="Issue Under Review">Issue Under Review</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+            </div>
+            <button class="admin-btn primary" onclick="exportMHD_CSV()">📥 Export CSV</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Request ID</th>
+                  <th>Citizen Name</th>
+                  <th>Mobile</th>
+                  <th>Station</th>
+                  <th>Callback Requested</th>
+                  <th>Assigned Officer</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="mhdTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="admin-pagination" id="mhdPagination"></div>
+        </div>
+      </div>
+
+      <!-- 4. COUNSELLING BOOKINGS DASHBOARD -->
+      <div class="admin-subview" id="admin-view-counsel" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; width:100%; max-width:800px;">
+              <input type="text" id="cnsSearchQuery" placeholder="Search CNS ID, Name, Counselor..." class="admin-input" style="max-width:240px;" oninput="fetchCNSAdmin()"/>
+              <select id="cnsFilterStatus" class="admin-select" style="max-width:160px;" onchange="fetchCNSAdmin()">
+                <option value="">All Statuses</option>
+                <option value="Application Received">Application Received</option>
+                <option value="Session Pending">Session Pending</option>
+                <option value="Session Scheduled">Session Scheduled</option>
+                <option value="Session Completed">Session Completed</option>
+              </select>
+            </div>
+            <button class="admin-btn primary" onclick="exportCNS_CSV()">📥 Export CSV</button>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Booking ID</th>
+                  <th>Citizen Name</th>
+                  <th>Mobile</th>
+                  <th>Pref Date/Time</th>
+                  <th>Assigned Counselor</th>
+                  <th>Scheduled Session</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="cnsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="admin-pagination" id="cnsPagination"></div>
+        </div>
+      </div>
+
+      <!-- 5. WOMEN EMPOWERMENT DASHBOARD -->
+      <div class="admin-subview" id="admin-view-empower" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <div style="display:flex; gap:10px; flex-wrap:wrap; width:100%; max-width:800px;">
+              <input type="text" id="empSearchQuery" placeholder="Search SCH ID, Applicant, Program..." class="admin-input" style="max-width:240px;" oninput="fetchEmpowerAdmin()"/>
+              <select id="empFilterStatus" class="admin-select" style="max-width:160px;" onchange="fetchEmpowerAdmin()">
+                <option value="">All Statuses</option>
+                <option value="Application Received">Application Received</option>
+                <option value="Exported">Exported</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="admin-btn" onclick="bulkExportSelected('csv')">📤 Export Selected (CSV)</button>
+              <button class="admin-btn" onclick="bulkExportSelected('xlsx')">📤 Export Selected (Excel)</button>
+              <button class="admin-btn danger" onclick="bulkCloseSelected()">❌ Bulk Close</button>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th width="40"><input type="checkbox" id="empSelectAll" onclick="toggleEmpSelectAll(this)"/></th>
+                  <th>Application ID</th>
+                  <th>Scheme Program</th>
+                  <th>Applicant Name</th>
+                  <th>Mobile</th>
+                  <th>Age/Gender</th>
+                  <th>Status</th>
+                  <th>Submitted At</th>
+                </tr>
+              </thead>
+              <tbody id="empTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <div class="admin-pagination" id="empPagination"></div>
+        </div>
+      </div>
+
+      <!-- 6. FEMALE OFFICERS DIRECTORY -->
+      <div class="admin-subview" id="admin-view-officers" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <h3 class="admin-chart-title" style="margin-bottom:0;">👮 Active Officers &amp; Counsellors Database (Etawah)</h3>
+            <button class="admin-btn primary" onclick="openOfficerModalAdd()">➕ Add New Profile</button>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Name</th>
+                  <th>Type</th>
+                  <th>Designation</th>
+                  <th>Mobile</th>
+                  <th>District &amp; Station</th>
+                  <th>Availability</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminOfficersTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. EMERGENCY SOS REQUESTS QUEUE -->
+      <div class="admin-subview" id="admin-view-emergency" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <h3 class="admin-chart-title" style="margin-bottom:0;">🚨 Emergency Distress &amp; SOS Logs</h3>
+            <button class="admin-btn danger" onclick="fetchEmergencySOSAdmin()">🔄 Refresh Distress Queue</button>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Distress ID</th>
+                  <th>Citizen Name</th>
+                  <th>Mobile</th>
+                  <th>Distress Type</th>
+                  <th>GPS Location / Coordinates</th>
+                  <th>Dispatch Status</th>
+                  <th>Time Triggered</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="emergencyTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. EMERGENCY CONTACTS CARD EDITOR -->
+      <div class="admin-subview" id="admin-view-contacts" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <h3 class="admin-chart-title" style="margin-bottom:0;">📞 Public Emergency Helpline Cards</h3>
+            <button class="admin-btn primary" onclick="openContactModalAdd()">➕ Add Helpline Card</button>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Photo</th>
+                  <th>Department</th>
+                  <th>Designation</th>
+                  <th>Officer Name</th>
+                  <th>Helpline Number</th>
+                  <th>Priority</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminContactsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. AUDIT SYSTEM LOGS -->
+      <div class="admin-subview" id="admin-view-logs" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header">
+            <h3 class="admin-chart-title" style="margin-bottom:0;">📜 Audit Trail Logs</h3>
+            <div style="display:flex; gap:8px;">
+              <button class="admin-btn" onclick="runSupabaseDiagnostic()" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);">🔍 Run Supabase Diagnostic</button>
+              <button class="admin-btn danger" onclick="clearActivityLogs()">Clear Log History</button>
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Actor Email</th>
+                  <th>Action</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="adminLogsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+          <!-- Supabase Diagnostic Results Container -->
+          <div style="margin-top:20px; background:#0b1437; border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:16px;">
+            <div style="color:#10b981; font-weight:700; font-size:12px; margin-bottom:10px;">🔍 Supabase Diagnostic Results</div>
+            <div id="supabaseDiagnosticResults" style="color:#a3b1cc; font-size:11px;">
+              Click "Run Supabase Diagnostic" above to check your database connection and table health.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. CHART.JS ANALYTICS DASHBOARD -->
+      <div class="admin-subview" id="admin-view-analytics" style="display:none;">
+        <div class="admin-charts-grid">
+          <div class="admin-chart-box">
+            <div class="admin-chart-title">📈 Monthly Report Trend (Real Data)</div>
+            <div style="position:relative; height:280px; width:100%;">
+              <canvas id="chartMonthlyTrend"></canvas>
+            </div>
+          </div>
+          <div class="admin-chart-box">
+            <div class="admin-chart-title">🏷️ Complaint Category Distribution (Real Data)</div>
+            <div style="position:relative; height:280px; width:100%;">
+              <canvas id="chartCategoryBreakdown"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="admin-charts-grid" style="grid-template-columns: 1fr; margin-top:20px;">
+          <div class="admin-chart-box">
+            <div class="admin-chart-title">📍 District-wise Distribution</div>
+            <div style="position:relative; height:280px; width:100%;">
+              <canvas id="chartDistrictDistribution"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11. REPORTS AND EXPORTS PANEL -->
+      <div class="admin-subview" id="admin-view-reports" style="display:none;">
+        <div class="admin-section print-area">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;" class="admin-section-header-no-print">
+            <h3 class="admin-chart-title" style="margin-bottom:0;">📄 Centralized Case Registry Reports</h3>
+            <div style="display:flex; gap:8px;">
+              <button class="admin-btn" onclick="window.print()">🖨️ Print Report</button>
+              <button class="admin-btn primary" onclick="exportMasterReportCSV()">📥 Export Master CSV</button>
+            </div>
+          </div>
+          
+          <div style="background:#111c44; padding:16px; border-radius:12px; margin-bottom:16px; display:grid; grid-template-columns: repeat(4, 1fr); gap:12px;" class="admin-section-header-no-print">
+            <div>
+              <label style="font-size:11px; color:#a3b1cc; display:block; margin-bottom:6px;">Select Module</label>
+              <select id="repModule" class="admin-select" onchange="runReportsQuery()">
+                <option value="complaints">Standard Complaints</option>
+                <option value="ars_reports">Anti-Romeo Reports</option>
+                <option value="mhd_requests">Mahila Help Desk</option>
+                <option value="counselling_bookings">Counselling Sessions</option>
+                <option value="empowerment_applications">Welfare Programs</option>
+                <option value="emergency_requests">Emergency SOS Alerts</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:#a3b1cc; display:block; margin-bottom:6px;">Filter District</label>
+              <select id="repDistrict" class="admin-select" onchange="runReportsQuery()">
+                <option value="">All Districts</option>
+                <option value="Etawah">Etawah</option>
+                <option value="Lucknow">Lucknow</option>
+                <option value="Kanpur">Kanpur</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:#a3b1cc; display:block; margin-bottom:6px;">Filter Status</label>
+              <select id="repStatus" class="admin-select" onchange="runReportsQuery()">
+                <option value="">All Statuses</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:11px; color:#a3b1cc; display:block; margin-bottom:6px;">Search Keyword</label>
+              <input type="text" id="repSearch" class="admin-input" placeholder="Search ID, name, location..." oninput="runReportsQuery()"/>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead id="reportsTableHeader">
+                <!-- Dynamic headers -->
+              </thead>
+              <tbody id="reportsTableBody">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+          </div>
+          
+          <div class="admin-pagination" id="reportsPagination"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ==========================================
+     POPUP MODALS (PUBLIC & INTERACTIVE)
+     ========================================== -->
+
+<!-- 1. LOGIN MODAL -->
+<div class="modal-overlay" id="modalLogin" role="dialog" aria-modal="true" aria-labelledby="loginModalTitle" aria-describedby="loginModalSubtitle">
+  <div class="modal-box auth-modal">
+    <button class="modal-close" type="button" aria-label="Close login dialog" onclick="closeModal('modalLogin')">✕</button>
+    <div class="modal-title" id="loginModalTitle">Secure Government Login</div>
+    <div class="modal-subtitle" id="loginModalSubtitle">Access ShaktiCop citizen services and official police dashboards with verified credentials.</div>
+    <form id="loginForm" onsubmit="event.preventDefault(); handleLoginSubmit();">
+      <div class="modal-field">
+        <label for="loginEmail">Email Address</label>
+        <input type="email" id="loginEmail" name="email" placeholder="citizen@example.com" autocomplete="email" aria-label="Email address" required/>
+      </div>
+      <div class="modal-field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" name="password" placeholder="Enter password" autocomplete="current-password" aria-label="Password" required/>
+      </div>
+      <div class="login-demo-card" aria-label="Demo credentials">
+        <div class="login-demo-title">Demo Credentials</div>
+        <p><span>Citizen Dashboard</span> Any email with password <strong>user@123</strong></p>
+        <p><span>Admin Panel</span> <strong>adarsh004455@gmail.com</strong> with password <strong>admin@098</strong></p>
+      </div>
+      <button class="modal-btn" id="loginSubmitBtn" type="submit"><span>Login / Sign Up</span></button>
+    </form>
+  </div>
+</div>
+
+<!-- 2. COMPLAINT REGISTRATION MODAL -->
+<div class="modal-overlay" id="modalRegisterComplaint">
+  <div class="modal-box" style="max-width: 600px;">
+    <button class="modal-close" onclick="closeModal('modalRegisterComplaint')">✕</button>
+    <div class="modal-title">📝 File a Safety Complaint</div>
+    <div class="modal-subtitle">Your complaint goes directly to the police database. Safe and secure.</div>
+    
+    <div id="modalRegisterComplaint-active-wrapper" style="display:none;"></div>
+    
+    <form id="complaintForm" onsubmit="event.preventDefault(); submitComplaintForm();">
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>Your Name</label>
+          <input type="text" id="c-name" required placeholder="Enter your full name"/>
+        </div>
+        <div class="modal-field">
+          <label>Mobile Number</label>
+          <input type="tel" id="c-mobile" required placeholder="10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')"/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Email Address</label>
+        <input type="email" id="c-email" placeholder="Your email address (for tracking)"/>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>District</label>
+          <select id="c-district" required onchange="populateComplaintStations(this.value)">
+            <option value="">Select District</option>
+            <option value="Etawah">Etawah</option>
+            <option value="Lucknow">Lucknow</option>
+            <option value="Kanpur">Kanpur</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Police Station</label>
+          <select id="c-station" required>
+            <option value="">Select Station</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>Complaint Category</label>
+          <select id="c-category" required>
+            <option value="">Select Category</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Anonymous Option</label>
+          <select id="c-anonymous" onchange="toggleAnonymousDetails(this.value)">
+            <option value="false">No — Show Identity</option>
+            <option value="true">Yes — Keep Anonymous</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>Incident Date</label>
+          <input type="date" id="c-date" required/>
+        </div>
+        <div class="modal-field">
+          <label>Incident Time</label>
+          <input type="time" id="c-time" required/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Exact Location / Landmark</label>
+        <input type="text" id="c-location" required placeholder="Where did it happen?"/>
+      </div>
+      <div class="modal-field">
+        <label>Describe Incident</label>
+        <textarea id="c-desc" required placeholder="Provide clear descriptions of eve-teasing, threats, or harassment details..." style="min-height:100px;"></textarea>
+      </div>
+      
+      <!-- Attachment Section -->
+      <div class="modal-field">
+        <label>Upload Proof (Images, Video, Audio, Docs)</label>
+        <input type="file" id="complaintFiles" accept="image/*,video/*,audio/*,application/pdf" multiple onchange="handleFileSelect(event)"/>
+        <div class="file-upload-preview" id="complaintFilePreview"></div>
+      </div>
+      
+      <button class="modal-btn" type="submit">📝 Submit Complaint</button>
+    </form>
+  </div>
+</div>
+
+<!-- 3. MAHILA HELP DESK MODAL -->
+<div class="modal-overlay" id="modalHelpDesk">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalHelpDesk')">✕</button>
+    <div class="modal-title">👮 Mahila Help Desk Call Assistance</div>
+    <div class="modal-subtitle">Connect with a female police officer at your nearest local station.</div>
+    
+    <div id="modalHelpDesk-active-wrapper" style="display:none;"></div>
+    
+    <form id="helpDeskForm" onsubmit="event.preventDefault(); submitHelpDeskForm();">
+      <div class="modal-field">
+        <label>Full Name</label>
+        <input type="text" id="hd-name" placeholder="Enter your name" required/>
+      </div>
+      <div class="modal-field">
+        <label>Mobile Number</label>
+        <input type="tel" id="hd-phone" placeholder="Enter 10 digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required/>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>District</label>
+          <select id="hd-district" onchange="populateHelpDeskStations(this.value)" required>
+            <option value="">Select District</option>
+            <option value="Etawah">Etawah</option>
+            <option value="Lucknow">Lucknow</option>
+            <option value="Kanpur">Kanpur</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Police Station</label>
+          <select id="hd-station" required>
+            <option value="">Select Station</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Describe Safety Concern</label>
+        <textarea id="hd-desc" placeholder="What support or query do you have for the desk officers?" required style="min-height:80px;"></textarea>
+      </div>
+      <div class="modal-field" style="display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" id="hd-callback" checked style="width:auto; margin:0;"/>
+        <label for="hd-callback" style="margin:0; font-size:12px; cursor:pointer;">Request immediate female officer call-back</label>
+      </div>
+      <button class="modal-btn" type="submit">📞 Request Desk Session</button>
+    </form>
+  </div>
+</div>
+
+<!-- 4. ANTI ROMEO MODAL -->
+<div class="modal-overlay" id="modalRomeo">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalRomeo')">✕</button>
+    <div class="modal-title">🚔 Anti-Romeo Squad Dispatch</div>
+    <div class="modal-subtitle">Report harassment, stalking, or unsafe local hotspots.</div>
+    
+    <div id="modalRomeo-active-wrapper" style="display:none;"></div>
+    
+    <form id="romeoForm" onsubmit="event.preventDefault(); submitRomeoForm();">
+      <div class="modal-field">
+        <label>Applicant Name (Keep empty if anonymous)</label>
+        <input type="text" id="ar-name" placeholder="Enter your name or leave blank for anonymity"/>
+      </div>
+      <div class="modal-field">
+        <label>Mobile Number (For tracking verification)</label>
+        <input type="tel" id="ar-phone" placeholder="Enter 10 digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required/>
+      </div>
+      <div class="modal-field">
+        <label>Incident Location / Spot Area</label>
+        <input type="text" id="ar-location" placeholder="e.g. Near Women College Main Gate, Etawah" required/>
+      </div>
+      <div class="modal-field">
+        <label>Select District</label>
+        <select id="ar-district" required>
+          <option value="">Select District</option>
+          <option value="Etawah">Etawah</option>
+          <option value="Lucknow">Lucknow</option>
+          <option value="Kanpur">Kanpur</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Stalking or Harassment Details</label>
+        <textarea id="ar-desc" placeholder="Describe the scene, number of stalkers, or repeat behaviour..." required style="min-height:80px;"></textarea>
+      </div>
+      <button class="modal-btn" type="submit">🚨 Dispatch Anti-Romeo Patrol</button>
+    </form>
+  </div>
+</div>
+
+<!-- 5. DOMESTIC VIOLENCE SOS / EMERGENCY REQUEST MODAL -->
+<div class="modal-overlay" id="modalDV">
+  <div class="modal-box" style="max-content; background: linear-gradient(135deg, #742a2a 0%, #3f1818 100%); color:#fff; border: 1.5px solid #e53e3e;">
+    <button class="modal-close" onclick="closeModal('modalDV')" style="color:#fff;">✕</button>
+    <div class="modal-title" style="color:#feb2b2;">🆘 Silent Emergency SOS Distress</div>
+    <div class="modal-subtitle" style="color:#fc8181;">This triggers an emergency dispatch alert to nearest PCR units.</div>
+    
+    <div id="modalDV-active-wrapper" style="display:none;"></div>
+    
+    <form id="dvForm" onsubmit="event.preventDefault(); submitDVForm();">
+      <div class="modal-field">
+        <label style="color:#feb2b2;">Your Full Name</label>
+        <input type="text" id="dv-name" placeholder="Enter full name" required style="background:rgba(0,0,0,0.4); border-color:#e53e3e; color:#fff;"/>
+      </div>
+      <div class="modal-field">
+        <label style="color:#feb2b2;">Mobile Number</label>
+        <input type="tel" id="dv-phone" placeholder="Enter 10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required style="background:rgba(0,0,0,0.4); border-color:#e53e3e; color:#fff;"/>
+      </div>
+      <div class="modal-field">
+        <label style="color:#feb2b2;">District</label>
+        <select id="dv-district" required style="background:rgba(0,0,0,0.4); border-color:#e53e3e; color:#fff;">
+          <option value="">Select District</option>
+          <option value="Etawah">Etawah</option>
+          <option value="Lucknow">Lucknow</option>
+          <option value="Kanpur">Kanpur</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label style="color:#feb2b2;">Emergency Location / Landmarks</label>
+        <input type="text" id="dv-location" placeholder="e.g. Room 3B, House 45, Civil Lines, Etawah" required style="background:rgba(0,0,0,0.4); border-color:#e53e3e; color:#fff;"/>
+      </div>
+      <div class="modal-field">
+        <label style="color:#feb2b2;">Help Type Required</label>
+        <select id="dv-help-type" style="background:rgba(0,0,0,0.4); border-color:#e53e3e; color:#fff;">
+          <option value="Domestic Violence Rescue">🏠 Domestic Abuse Shelter Rescue</option>
+          <option value="Medical Assistance">🚑 Medical &amp; Trauma Support</option>
+          <option value="Police Protection Rescue">🚨 Immediate Police Dispatch</option>
+        </select>
+      </div>
+      <button class="modal-btn" type="submit" style="background:#e53e3e; color:#fff; font-weight:700; border:none; box-shadow: 0 4px 15px rgba(229,62,62,0.4);">🆘 SEND DISTRESS SIGNAL</button>
+    </form>
+  </div>
+</div>
+
+<!-- 6. COUNSELLING BOOKING MODAL -->
+<div class="modal-overlay" id="modalCounsel">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalCounsel')">✕</button>
+    <div class="modal-title">💬 Book Counselling Session</div>
+    <div class="modal-subtitle">Confidential trauma &amp; psychological assistance sessions with certified professionals.</div>
+    
+    <div id="modalCounsel-active-wrapper" style="display:none;"></div>
+    
+    <form id="counselForm" onsubmit="event.preventDefault(); submitCounsellorBooking();">
+      <div class="modal-field">
+        <label>Your Full Name</label>
+        <input type="text" id="cn-name" placeholder="Enter full name" required/>
+      </div>
+      <div class="modal-field">
+        <label>Mobile Number</label>
+        <input type="tel" id="cn-phone" placeholder="Enter 10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required/>
+      </div>
+      <div class="modal-field">
+        <label>District</label>
+        <select id="cn-district" required>
+          <option value="">Select District</option>
+          <option value="Etawah">Etawah</option>
+          <option value="Lucknow">Lucknow</option>
+          <option value="Kanpur">Kanpur</option>
+        </select>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>Preferred Date</label>
+          <input type="date" id="cn-pref-date" required/>
+        </div>
+        <div class="modal-field">
+          <label>Preferred Time Slot</label>
+          <input type="time" id="cn-pref-time" required/>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Reason for Session Request</label>
+        <textarea id="cn-reason" placeholder="Brief details to help match you with the right specialist..." required style="min-height:80px;"></textarea>
+      </div>
+      <button class="modal-btn" type="submit">📅 Book Counselling Session</button>
+    </form>
+  </div>
+</div>
+
+<!-- 7. WOMEN EMPOWERMENT / SKILLS APPLICATION MODAL (JSS / Self Defence) -->
+<div class="modal-overlay" id="modalEmpowerApply">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalEmpowerApply')">✕</button>
+    <div class="modal-title">🎓 Empowerment Program Enrollment</div>
+    <div class="modal-subtitle">Enroll in self-defence camps, digital literacy, or tailoring workshops.</div>
+    
+    <div id="modalEmpowerApply-active-wrapper" style="display:none;"></div>
+    
+    <form id="empowerForm" onsubmit="event.preventDefault(); submitProgramEnrollment();">
+      <input type="hidden" id="emp-scheme-title"/>
+      <div class="modal-field">
+        <label>Program / Scheme selected</label>
+        <input type="text" id="emp-program-display" readonly style="background:#f1f5f9; border-color:#e2e8f0;"/>
+      </div>
+      <div class="modal-field">
+        <label>Full Name</label>
+        <input type="text" id="emp-name" placeholder="Enter your full name" required/>
+      </div>
+      <div class="modal-field">
+        <label>Mobile Number</label>
+        <input type="tel" id="emp-phone" placeholder="Enter 10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required/>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>Age</label>
+          <input type="number" id="emp-age" placeholder="Enter your age" min="10" max="100" required/>
+        </div>
+        <div class="modal-field">
+          <label>Gender</label>
+          <select id="emp-gender" required>
+            <option value="Female">Female</option>
+            <option value="Male">Male (Not Recommended)</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>District</label>
+        <select id="emp-district" required>
+          <option value="">Select District</option>
+          <option value="Etawah">Etawah</option>
+          <option value="Lucknow">Lucknow</option>
+          <option value="Kanpur">Kanpur</option>
+        </select>
+      </div>
+      <button class="modal-btn" type="submit">📝 Register Application</button>
+    </form>
+  </div>
+</div>
+
+<!-- 8. FEMALE OFFICER CALLBACK / LEGAL AID MODAL -->
+<div class="modal-overlay" id="modalLegalAid">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalLegalAid')">✕</button>
+    <div class="modal-title">⚖️ Legal Aid &amp; Callback Services</div>
+    <div class="modal-subtitle">Connect with legal cell attorneys and panel lawyers for assistance.</div>
+    
+    <div id="modalLegalAid-active-wrapper" style="display:none;"></div>
+    
+    <form id="legalAidForm" onsubmit="event.preventDefault(); submitLegalForm();">
+      <div class="modal-field">
+        <label>Applicant Full Name</label>
+        <input type="text" id="la-name" placeholder="Enter your name" required/>
+      </div>
+      <div class="modal-field">
+        <label>Mobile Number</label>
+        <input type="tel" id="la-phone" placeholder="Enter 10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required/>
+      </div>
+      <div class="modal-field">
+        <label>District</label>
+        <select id="la-district" required>
+          <option value="">Select District</option>
+          <option value="Etawah">Etawah</option>
+          <option value="Lucknow">Lucknow</option>
+          <option value="Kanpur">Kanpur</option>
+        </select>
+      </div>
+      <div class="modal-field">
+        <label>Describe Legal Support Required</label>
+        <textarea id="la-desc" placeholder="Details about domestic disputes, property act assistance, or other safety litigation..." required style="min-height:80px;"></textarea>
+      </div>
+      <button class="modal-btn" type="submit">⚖️ Request Legal Consultation</button>
+    </form>
+  </div>
+</div>
+
+<!-- 9. AUDIO COMPLAINT RECORDING MODAL -->
+<div class="modal-overlay" id="modalAudio">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalAudio')">✕</button>
+    <div class="modal-title">🎙️ Voice FIR &amp; Complaint Recorder</div>
+    <div class="modal-subtitle">Record and submit your complaint in your own voice natively.</div>
+    
+    <div id="modalAudio-active-wrapper" style="display:none;"></div>
+    
+    <form id="audioForm" onsubmit="event.preventDefault(); submitAudioComplaint();">
+      <div class="modal-field">
+        <label>Your Name</label>
+        <input type="text" id="aud-name" placeholder="Enter full name" required/>
+      </div>
+      <div class="modal-field">
+        <label>Mobile Number</label>
+        <input type="tel" id="aud-phone" placeholder="Enter 10-digit mobile" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required/>
+      </div>
+      <div class="modal-field">
+        <label>District</label>
+        <select id="aud-district" required>
+          <option value="">Select District</option>
+          <option value="Etawah">Etawah</option>
+          <option value="Lucknow">Lucknow</option>
+          <option value="Kanpur">Kanpur</option>
+        </select>
+      </div>
+      
+      <!-- Audio recorder module -->
+      <div style="background:#f1f5f9; border-radius:12px; padding:20px; text-align:center; margin-bottom:16px;">
+        <div id="audioTimer" style="font-size:24px; font-weight:800; color:var(--navy); margin-bottom:10px;">00:00</div>
+        <div id="audioWaveform" style="height:40px; margin-bottom:12px; display:flex; justify-content:center; align-items:center; gap:3px;">
+          <div style="width:4px; height:8px; background:#e2e8f0; border-radius:2px;" class="wave-bar"></div>
+          <div style="width:4px; height:8px; background:#e2e8f0; border-radius:2px;" class="wave-bar"></div>
+          <div style="width:4px; height:8px; background:#e2e8f0; border-radius:2px;" class="wave-bar"></div>
+          <div style="width:4px; height:8px; background:#e2e8f0; border-radius:2px;" class="wave-bar"></div>
+        </div>
+        <div style="display:flex; justify-content:center; gap:12px;">
+          <button type="button" class="admin-btn primary" id="recStartBtn" onclick="startAudioRecording()" style="border-radius:50%; width:50px; height:50px; padding:0; display:flex; justify-content:center; align-items:center; font-size:20px;">🎤</button>
+          <button type="button" class="admin-btn danger" id="recStopBtn" onclick="stopAudioRecording()" disabled style="border-radius:50%; width:50px; height:50px; padding:0; display:flex; justify-content:center; align-items:center; font-size:20px;">🛑</button>
+        </div>
+        <div id="audioPlayPreview" style="margin-top:12px; display:none;">
+          <audio id="audioPlayback" controls style="width:100%;"></audio>
+        </div>
+      </div>
+      <button class="modal-btn" type="submit" id="audioSubmitBtn" disabled>📤 Submit Voice Complaint</button>
+    </form>
+  </div>
+</div>
+
+<!-- 10. SAFE TRAVEL MODE MODAL -->
+<div class="modal-overlay" id="modalTravel">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modalTravel')">✕</button>
+    <div class="modal-title">🛡️ Safe Travel monitor</div>
+    <div class="modal-subtitle">Share your transport details. PCR alerts automatically trigger on trip delays.</div>
+    
+    <div id="modalTravel-active-wrapper" style="display:none;"></div>
+    
+    <form id="travelForm" onsubmit="event.preventDefault(); submitTravelForm();">
+      <div class="modal-field">
+        <label>Your Name</label>
+        <input type="text" id="tr-name" placeholder="Full name" required/>
+      </div>
+      <div class="modal-field">
+        <label>Mobile Number</label>
+        <input type="tel" id="tr-phone" placeholder="10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')" required/>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>District</label>
+          <select id="tr-district" required>
+            <option value="">Select District</option>
+            <option value="Etawah">Etawah</option>
+            <option value="Lucknow">Lucknow</option>
+            <option value="Kanpur">Kanpur</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Vehicle / Transport Type</label>
+          <select id="tr-transport" required>
+            <option value="Auto Rickshaw">🛺 Auto Rickshaw</option>
+            <option value="Cab / Taxi">🚗 Cab / Taxi</option>
+            <option value="Public Bus">🚌 Public Bus</option>
+            <option value="Personal Vehicle">🏍️ Personal Vehicle</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-field">
+        <label>Cab/Vehicle Registration Plate Number</label>
+        <input type="text" id="tr-vehicle-num" placeholder="e.g. UP 75 AB 1234" required/>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label>Starting Point</label>
+          <input type="text" id="tr-start" placeholder="Starting location" required/>
+        </div>
+        <div class="modal-field">
+          <label>Destination Point</label>
+          <input type="text" id="tr-end" placeholder="Ending destination" required/>
+        </div>
+      </div>
+      <button class="modal-btn" type="submit">🛡️ Start Journey Monitor</button>
+    </form>
+  </div>
+</div>
+
+<!-- ==========================================
+     ADMIN ONLY DETAILED CRUD/MODAL ACTIONS
+     ========================================== -->
+
+<!-- A. ASSIGNMENT & STATUS UPDATE MODAL (Anti-Romeo / MHD / SOS) -->
+<div class="modal-overlay" id="modalAdminAction">
+  <div class="modal-box" style="background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.15);">
+    <button class="modal-close" onclick="closeModal('modalAdminAction')" style="color:#fff;">✕</button>
+    <div class="modal-title">🚨 Manage Incident &amp; Assign Patrol</div>
+    <div class="modal-subtitle" style="color:#94a3b8;">Review report and allocate police officers or change status.</div>
+    <form id="adminActionForm" onsubmit="event.preventDefault(); submitAdminActionForm();">
+      <input type="hidden" id="actionModuleTable"/>
+      <input type="hidden" id="actionRecordId"/>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Incident ID</label>
+        <input type="text" id="actionRecordIdDisplay" readonly style="background:#1e293b; color:#cbd5e1; border-color:rgba(255,255,255,0.1);"/>
+      </div>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Update Workflow Status</label>
+        <select id="actionStatus" class="admin-select" onchange="toggleDelayReason(this.value)" required>
+          <!-- Options loaded dynamically based on module -->
+        </select>
+      </div>
+
+      <div class="modal-field" id="actionDelayReasonContainer" style="display:none;">
+        <label style="color:#feb2b2;">Delay Reason (Mandatory for delays / escalations)</label>
+        <textarea id="actionDelayReason" class="admin-textarea" placeholder="Input the official cause for delay in assignment/patrol dispatch..." style="border-color:#f87171;"></textarea>
+      </div>
+      
+      <div class="modal-field" id="actionOfficerField">
+        <label style="color:#94a3b8;">Assign Officer / Nodal Patrol</label>
+        <select id="actionOfficerId" class="admin-select">
+          <option value="">-- No Officer Assigned --</option>
+        </select>
+      </div>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Investigation Update Remarks</label>
+        <textarea id="actionRemarks" class="admin-textarea" placeholder="Update notes for logs. Visible to citizen in timeline." required></textarea>
+      </div>
+      
+      <button class="modal-btn" type="submit" style="background:var(--pink2); color:#fff; font-weight:700;">💾 Save Case Updates</button>
+    </form>
+  </div>
+</div>
+
+<!-- B. COUNSELLING SCHEDULER MODAL -->
+<div class="modal-overlay" id="modalCounselAction">
+  <div class="modal-box" style="background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.15);">
+    <button class="modal-close" onclick="closeModal('modalCounselAction')" style="color:#fff;">✕</button>
+    <div class="modal-title">📅 Schedule Counselling Session</div>
+    <div class="modal-subtitle" style="color:#94a3b8;">Select counselor, Date, Time, and add clinical remarks.</div>
+    <form id="counselActionForm" onsubmit="event.preventDefault(); submitCounselActionForm();">
+      <input type="hidden" id="counselActionId"/>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Booking Request ID</label>
+        <input type="text" id="counselActionIdDisplay" readonly style="background:#1e293b; color:#cbd5e1; border-color:rgba(255,255,255,0.1);"/>
+      </div>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Assign Expert Counsellor</label>
+        <select id="counselAssignee" class="admin-select" required>
+          <option value="">-- Select Counsellor --</option>
+        </select>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Session Date</label>
+          <input type="date" id="counselSessionDate" class="admin-input" required/>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Session Time</label>
+          <input type="time" id="counselSessionTime" class="admin-input" required/>
+        </div>
+      </div>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Update Session Status</label>
+        <select id="counselStatus" class="admin-select" required>
+          <option value="Session Pending">Session Pending</option>
+          <option value="Session Scheduled">Session Scheduled</option>
+          <option value="Session Completed">Session Completed</option>
+        </select>
+      </div>
+
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Clinical Remarks / Notes</label>
+        <textarea id="counselRemarks" class="admin-textarea" placeholder="Clinical notes, helpline references, or session remarks..." required></textarea>
+      </div>
+      
+      <button class="modal-btn" type="submit" style="background:var(--pink2); color:#fff; font-weight:700;">📅 Confirm Session Slot</button>
+    </form>
+  </div>
+</div>
+
+<!-- C. ADD/EDIT OFFICER PROFILE MODAL -->
+<div class="modal-overlay" id="modalOfficerEdit">
+  <div class="modal-box" style="background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.15);">
+    <button class="modal-close" onclick="closeModal('modalOfficerEdit')" style="color:#fff;">✕</button>
+    <div class="modal-title" id="officerModalTitle">👮 Edit Officer Profile</div>
+    <div class="modal-subtitle" style="color:#94a3b8;">Update name, designation, contact numbers, and location assignment.</div>
+    <form id="officerEditForm" onsubmit="event.preventDefault(); submitOfficerForm();">
+      <input type="hidden" id="editOfficerId"/>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Full Name</label>
+        <input type="text" id="eo-name" class="admin-input" required placeholder="e.g. SI Kavita Verma"/>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Profile Type</label>
+          <select id="eo-type" class="admin-select" required>
+            <option value="police">Police Officer</option>
+            <option value="counsellor">Specialist Counsellor</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Designation</label>
+          <input type="text" id="eo-designation" class="admin-input" required placeholder="e.g. Sub-Inspector"/>
+        </div>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Mobile Number (CUG)</label>
+          <input type="tel" id="eo-mobile" class="admin-input" required placeholder="10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')"/>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Email Address</label>
+          <input type="email" id="eo-email" class="admin-input" placeholder="officer@uppolice.gov.in"/>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">District</label>
+          <select id="eo-district" class="admin-select" required>
+            <option value="Etawah">Etawah</option>
+            <option value="Lucknow">Lucknow</option>
+            <option value="Kanpur">Kanpur</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Police Station / Station Assignment</label>
+          <input type="text" id="eo-station" class="admin-input" required placeholder="e.g. Civil Lines PS"/>
+        </div>
+      </div>
+
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Availability Status</label>
+        <select id="eo-availability" class="admin-select">
+          <option value="true">Active &amp; Available</option>
+          <option value="false">On Leave / Unavailable</option>
+        </select>
+      </div>
+
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Photo Avatar URL</label>
+        <input type="text" id="eo-photo" class="admin-input" placeholder="URL link to image asset"/>
+      </div>
+      
+      <button class="modal-btn" type="submit" style="background:var(--pink2); color:#fff; font-weight:700;">💾 Save Profile</button>
+    </form>
+  </div>
+</div>
+
+<!-- D. ADD/EDIT CONTACT HELPLINE MODAL -->
+<div class="modal-overlay" id="modalContactEdit">
+  <div class="modal-box" style="background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.15);">
+    <button class="modal-close" onclick="closeModal('modalContactEdit')" style="color:#fff;">✕</button>
+    <div class="modal-title" id="contactModalTitle">📞 Edit Emergency Helpline Card</div>
+    <div class="modal-subtitle" style="color:#94a3b8;">Configure helpline labels, phone numbers, and display ordering.</div>
+    <form id="contactEditForm" onsubmit="event.preventDefault(); submitContactForm();">
+      <input type="hidden" id="editContactId"/>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Department / Helpline Label</label>
+        <input type="text" id="ec-department" class="admin-input" required placeholder="e.g. Women Powerline"/>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Officer Name (If specific)</label>
+          <input type="text" id="ec-officer" class="admin-input" placeholder="e.g. SI Neha Singh"/>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Designation</label>
+          <input type="text" id="ec-designation" class="admin-input" placeholder="e.g. Squad Lead"/>
+        </div>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Helpline Phone Number</label>
+          <input type="text" id="ec-phone" class="admin-input" required placeholder="e.g. 1090 or 9454406780"/>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Display Priority (High priority first)</label>
+          <input type="number" id="ec-priority" class="admin-input" required placeholder="0"/>
+        </div>
+      </div>
+
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Photo Avatar URL</label>
+        <input type="text" id="ec-photo" class="admin-input" placeholder="URL link to image asset"/>
+      </div>
+      
+      <button class="modal-btn" type="submit" style="background:var(--pink2); color:#fff; font-weight:700;">💾 Save Helpline Card</button>
+    </form>
+  </div>
+</div>
+
+<!-- JS Main Engine Script -->
+<script type="module" src="app.js"></script>
+
+</body>
+</html>
