@@ -28,6 +28,11 @@
   <!-- HEADER -->
   <header>
     <div class="header-inner">
+      <button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-label="Open navigation menu" aria-controls="mobileDrawer" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <a href="#" class="logo logo-wrap" title="Uttar Pradesh Police" aria-label="Uttar Pradesh Police home" onclick="switchTab('shakti');return false;">
         <div class="logo-icon logo-emblem">
           <img class="up-police-logo" src="assets/up-police-logo.png" alt="Official Uttar Pradesh Police logo" width="72" height="72" decoding="async" onerror="handleLogoError(this)"/>
@@ -58,6 +63,50 @@
       </div>
     </div>
   </header>
+
+  <div class="mobile-drawer-overlay" id="mobileDrawerOverlay" aria-hidden="true"></div>
+  <aside class="mobile-drawer" id="mobileDrawer" aria-label="Mobile navigation" aria-hidden="true">
+    <div class="mobile-drawer-head">
+      <div class="mobile-drawer-user">
+        <div class="mobile-drawer-avatar" aria-hidden="true">👤</div>
+        <div>
+          <div class="mobile-drawer-welcome">Welcome back 👋</div>
+          <div class="mobile-drawer-email" id="mobileDrawerEmail">Guest user</div>
+        </div>
+      </div>
+      <button class="mobile-drawer-close" id="mobileDrawerClose" type="button" aria-label="Close navigation menu">×</button>
+    </div>
+    <nav class="mobile-drawer-nav" aria-label="Primary mobile">
+      <button type="button" data-mobile-action="home"><span>🏠</span> Home</button>
+      <button type="button" data-mobile-action="shakti"><span>🌸</span> Mission Shakti</button>
+      <button type="button" data-mobile-action="police"><span>👮</span> Police Services</button>
+      <button class="mobile-drawer-parent" type="button" id="mobileDashboardToggle" aria-expanded="true" aria-controls="mobileDashboardMenu">
+        <span>📊</span> My Dashboard <b id="mobileDashboardBadge" hidden>0</b>
+      </button>
+      <div class="mobile-drawer-submenu open" id="mobileDashboardMenu">
+        <button type="button" data-mobile-dashboard="complaints">My Complaints</button>
+        <button type="button" data-mobile-dashboard="ars">Anti Romeo</button>
+        <button type="button" data-mobile-dashboard="mhd">Mahila Help Desk</button>
+        <button type="button" data-mobile-dashboard="cns">Counselling</button>
+        <button type="button" data-mobile-dashboard="emp">JSS Programs</button>
+        <button type="button" data-mobile-dashboard="sos">SOS Requests</button>
+        <button type="button" data-mobile-action="notifications">Notifications <b id="mobileNotificationsBadge" hidden>0</b></button>
+        <button type="button" data-mobile-action="profile">Profile</button>
+      </div>
+      <button type="button" data-mobile-action="emergency"><span>📞</span> Emergency Contacts</button>
+      <button type="button" data-mobile-action="settings"><span>⚙</span> Settings</button>
+      <button type="button" data-mobile-action="logout"><span>🚪</span> Logout</button>
+    </nav>
+  </aside>
+
+  <nav class="mobile-bottom-nav" aria-label="Mobile bottom navigation">
+    <button type="button" data-mobile-action="home" class="active"><span>🏠</span><small>Home</small></button>
+    <button type="button" data-mobile-action="shakti"><span>🌸</span><small>Mission</small></button>
+    <button type="button" data-mobile-action="police"><span>👮</span><small>Police</small></button>
+    <button type="button" data-mobile-action="dashboard"><span>📊</span><small>Dashboard</small></button>
+    <button type="button" data-mobile-action="more"><span>☰</span><small>More</small></button>
+  </nav>
+  <button class="back-to-top" id="backToTopBtn" type="button" aria-label="Back to top">↑</button>
 
   <!-- HERO -->
   <div class="hero" id="publicHero">

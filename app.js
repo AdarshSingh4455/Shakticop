@@ -348,6 +348,7 @@ window.switchTab = function(tab) {
     buildSidebar();
     buildContent();
   }
+  updateMobileNavState(tab);
 };
 
 
@@ -456,8 +457,10 @@ async function fetchEmergencyContacts() {
   }
   
   container.innerHTML = list.map(c => `
-    <a href="tel:${c.phone_number}" class="emer-chip">
-      <span>🚨</span> ${c.department}: <strong>${c.phone_number}</strong>
+    <a href="tel:${c.phone_number}" class="emer-chip" aria-label="Call ${c.department} at ${c.phone_number}">
+      <span class="emer-icon">🚨</span>
+      <span class="emer-title">${c.department}</span>
+      <strong class="num">${c.phone_number}</strong>
     </a>
   `).join('');
 }
@@ -627,6 +630,7 @@ function postLoginAction() {
     userBadge.style.display = 'flex';
     userBadgeText.textContent = currentSessionUser.email;
   }
+  updateMobileUserChrome();
   
   const navDash = document.getElementById('nav-dashboard');
   if (navDash) navDash.style.display = 'inline-block';
@@ -667,6 +671,7 @@ window.doLogout = function() {
   
   const userBadge = document.getElementById('userBadge');
   if (userBadge) userBadge.style.display = 'none';
+  updateMobileUserChrome();
   
   const navDash = document.getElementById('nav-dashboard');
   if (navDash) navDash.style.display = 'none';
@@ -676,6 +681,7 @@ window.doLogout = function() {
   document.getElementById('publicSiteWrapper').style.display = 'block';
   
   switchTab('shakti');
+  closeMobileDrawer();
   showToast("Logged out successfully.", "info");
 };
 
@@ -1346,6 +1352,7 @@ window.switchUserDashboardTab = function(tabName) {
   }
   
   fetchUserDashboardData();
+  updateMobileNavState('dashboard');
 };
 
 window.fetchUserDashboardData = async function() {
@@ -1712,8 +1719,10 @@ async function fetchUserNotifications() {
   
   if (list.length === 0) {
     container.innerHTML = `<div style="font-size:11px; color:#94a3b8; text-align:center; padding:12px;">No notification alerts received.</div>`;
+    updateMobileNotificationBadges(0);
     return;
   }
+  updateMobileNotificationBadges(list.length);
   
   container.innerHTML = list.map(n => `
     <div style="background:#f8fafc; border-left:3px solid var(--pink); border-radius:4px; padding:10px; font-size:12px;">
@@ -3434,7 +3443,159 @@ window.diag = window.runSupabaseDiagnostic;
 
 
 // ==========================================
-// 23. ANNOUNCEMENT BAR LOADER
+// 23. MOBILE UX CONTROLS
+// ==========================================
+function getCompactEmail(email) {
+  if (!email) return 'Guest';
+  const [name, domain = ''] = String(email).split('@');
+  if (name.length <= 8) return domain ? `${name}@${domain}` : name;
+  return `${name.slice(0, 8)}...`;
+}
+
+function updateMobileUserChrome() {
+  const emailEl = document.getElementById('mobileDrawerEmail');
+  if (emailEl) emailEl.textContent = currentSessionUser ? currentSessionUser.email : 'Guest user';
+
+  const badgeText = document.getElementById('userBadgeText');
+  if (badgeText && currentSessionUser) badgeText.textContent = currentSessionUser.email;
+}
+
+function updateMobileNotificationBadges(count = 0) {
+  ['mobileNotificationsBadge', 'mobileDashboardBadge'].forEach(id => {
+    const badge = document.getElementById(id);
+    if (!badge) return;
+    badge.textContent = count > 99 ? '99+' : String(count);
+    badge.hidden = count <= 0;
+  });
+}
+
+function updateMobileNavState(tab = activePublicTab) {
+  document.querySelectorAll('.mobile-bottom-nav button, .mobile-drawer-nav button').forEach(btn => {
+    const action = btn.dataset.mobileAction;
+    const dash = btn.dataset.mobileDashboard;
+    const isActive =
+      (tab === 'shakti' && (action === 'home' || action === 'shakti')) ||
+      (tab === 'police' && action === 'police') ||
+      (tab === 'dashboard' && (action === 'dashboard' || dash === currentUserDashTab));
+    btn.classList.toggle('active', Boolean(isActive));
+  });
+}
+
+function openMobileDrawer() {
+  const drawer = document.getElementById('mobileDrawer');
+  const toggle = document.getElementById('mobileMenuToggle');
+  if (!drawer || !toggle) return;
+  document.body.classList.add('mobile-drawer-open');
+  drawer.setAttribute('aria-hidden', 'false');
+  toggle.setAttribute('aria-expanded', 'true');
+  const first = drawer.querySelector('button');
+  if (first) first.focus({ preventScroll: true });
+}
+
+function closeMobileDrawer() {
+  const drawer = document.getElementById('mobileDrawer');
+  const toggle = document.getElementById('mobileMenuToggle');
+  if (!drawer || !toggle) return;
+  document.body.classList.remove('mobile-drawer-open');
+  drawer.setAttribute('aria-hidden', 'true');
+  toggle.setAttribute('aria-expanded', 'false');
+}
+
+window.closeMobileDrawer = closeMobileDrawer;
+
+function goToDashboardSubtab(tabName) {
+  if (!currentSessionUser) {
+    openModal('modalLogin');
+    return;
+  }
+  switchTab('dashboard');
+  if (typeof window.switchUserDashboardTab === 'function') {
+    window.switchUserDashboardTab(tabName);
+  }
+  updateMobileNavState('dashboard');
+}
+
+function handleMobileNavigation(action) {
+  if (action === 'more') {
+    openMobileDrawer();
+    return;
+  }
+  if (action === 'home') {
+    switchTab('shakti');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (action === 'shakti') {
+    switchTab('shakti');
+    document.getElementById('publicMainWrap')?.scrollIntoView({ behavior: 'smooth' });
+  } else if (action === 'police') {
+    switchTab('police');
+    document.getElementById('publicMainWrap')?.scrollIntoView({ behavior: 'smooth' });
+  } else if (action === 'dashboard') {
+    if (!currentSessionUser) openModal('modalLogin');
+    else switchTab('dashboard');
+  } else if (action === 'notifications') {
+    goToDashboardSubtab(currentUserDashTab || 'complaints');
+    setTimeout(() => document.getElementById('userNotificationsList')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+  } else if (action === 'profile') {
+    goToDashboardSubtab(currentUserDashTab || 'complaints');
+    setTimeout(() => document.getElementById('citizenProfileCard')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 80);
+  } else if (action === 'emergency') {
+    switchTab('shakti');
+    setTimeout(() => document.getElementById('publicEmergencyBar')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  } else if (action === 'settings') {
+    showToast('Settings panel is coming soon.', 'info');
+  } else if (action === 'logout') {
+    if (currentSessionUser) doLogout();
+    else openModal('modalLogin');
+  }
+  closeMobileDrawer();
+  updateMobileNavState();
+}
+
+function initMobileUx() {
+  const toggle = document.getElementById('mobileMenuToggle');
+  const close = document.getElementById('mobileDrawerClose');
+  const overlay = document.getElementById('mobileDrawerOverlay');
+  const dashboardToggle = document.getElementById('mobileDashboardToggle');
+  const dashboardMenu = document.getElementById('mobileDashboardMenu');
+  const backToTop = document.getElementById('backToTopBtn');
+
+  toggle?.addEventListener('click', openMobileDrawer);
+  close?.addEventListener('click', closeMobileDrawer);
+  overlay?.addEventListener('click', closeMobileDrawer);
+  dashboardToggle?.addEventListener('click', () => {
+    const isOpen = !dashboardMenu?.classList.contains('open');
+    dashboardMenu?.classList.toggle('open', isOpen);
+    dashboardToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape') closeMobileDrawer();
+  });
+
+  document.querySelectorAll('[data-mobile-action]').forEach(btn => {
+    btn.addEventListener('click', () => handleMobileNavigation(btn.dataset.mobileAction));
+  });
+
+  document.querySelectorAll('[data-mobile-dashboard]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      goToDashboardSubtab(btn.dataset.mobileDashboard);
+      closeMobileDrawer();
+      updateMobileNavState('dashboard');
+    });
+  });
+
+  backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  window.addEventListener('scroll', () => {
+    backToTop?.classList.toggle('visible', window.scrollY > 400);
+  }, { passive: true });
+
+  updateMobileUserChrome();
+  updateMobileNavState();
+}
+
+
+// ==========================================
+// 24. ANNOUNCEMENT BAR LOADER
 // ==========================================
 async function loadAnnouncementBar() {
   const bar = document.getElementById('announcementBar');
@@ -3474,6 +3635,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 document.addEventListener('DOMContentLoaded', () => {
   seedSimulatorIfNeeded();
+  initMobileUx();
   applyLanguage();
   switchTab('shakti');
 });
