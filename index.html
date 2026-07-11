@@ -157,21 +157,6 @@
        USER PANEL DASHBOARD
        ========================================== -->
   <div class="main-wrap" id="userDashboard" style="display:none; flex-direction:column; gap:20px;">
-    <div class="dashboard-stats" style="margin-top:0;">
-      <div class="dash-stat-card" style="background:var(--gradient-primary)">
-        <div class="dash-num" id="u-total-num">0</div>
-        <div class="dash-lbl">My Total Requests</div>
-      </div>
-      <div class="dash-stat-card" style="background:#5f3dc4">
-        <div class="dash-num" id="u-pending-num">0</div>
-        <div class="dash-lbl">Active / Pending</div>
-      </div>
-      <div class="dash-stat-card" style="background:#16a34a">
-        <div class="dash-num" id="u-resolved-num">0</div>
-        <div class="dash-lbl">Resolved Cases</div>
-      </div>
-    </div>
-
     <!-- Citizen Sub-navigation Tabs -->
     <div class="user-dash-tabs">
       <button class="user-tab-btn active" onclick="switchUserDashboardTab('complaints')">📋 Complaints</button>
@@ -183,26 +168,26 @@
     </div>
 
     <!-- Profile Card (shown only when logged in) -->
-    <div id="citizenProfileCard" style="background:linear-gradient(135deg, var(--navy) 0%, #1e0a26 100%); border:1px solid rgba(230,73,128,0.2); border-radius:12px; padding:16px 20px; display:none; margin-bottom:0; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <div style="width:44px; height:44px; background:rgba(230,73,128,0.15); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px;">👤</div>
-        <div>
-          <div style="color:#fff; font-weight:700; font-size:14px;" id="citizenProfileEmail">citizen@email.com</div>
-          <div style="color:#a3b1cc; font-size:11px;">Registered Citizen — Etawah District</div>
+    <div id="citizenProfileCard" class="citizen-profile-card">
+      <div class="citizen-profile-main">
+        <div class="citizen-profile-avatar">👤</div>
+        <div class="citizen-profile-copy">
+          <div class="citizen-profile-email" id="citizenProfileEmail">citizen@email.com</div>
+          <div class="citizen-profile-district" id="citizenProfileDistrict">Registered Citizen — Etawah District</div>
         </div>
       </div>
-      <div style="display:flex; gap:8px;">
-        <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 16px;">
-          <div style="color:#e64980; font-weight:800; font-size:20px;" id="u-total-num">0</div>
-          <div style="color:#a3b1cc; font-size:10px;">Total</div>
+      <div class="citizen-profile-stats">
+        <div class="citizen-profile-stat">
+          <div class="citizen-profile-num total" id="citizenTotalNum">0</div>
+          <div class="citizen-profile-label">Total</div>
         </div>
-        <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 16px;">
-          <div style="color:#f59e0b; font-weight:800; font-size:20px;" id="u-pending-num">0</div>
-          <div style="color:#a3b1cc; font-size:10px;">Active</div>
+        <div class="citizen-profile-stat">
+          <div class="citizen-profile-num active" id="citizenActiveNum">0</div>
+          <div class="citizen-profile-label">Active</div>
         </div>
-        <div style="text-align:center; background:rgba(255,255,255,0.05); border-radius:8px; padding:8px 16px;">
-          <div style="color:#10b981; font-weight:800; font-size:20px;" id="u-resolved-num">0</div>
-          <div style="color:#a3b1cc; font-size:10px;">Resolved</div>
+        <div class="citizen-profile-stat">
+          <div class="citizen-profile-num resolved" id="citizenResolvedNum">0</div>
+          <div class="citizen-profile-label">Resolved</div>
         </div>
       </div>
     </div>

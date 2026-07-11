@@ -1475,6 +1475,8 @@ window.fetchUserDashboardData = async function() {
     }
   }
 
+  await updateCitizenStats();
+
   // Filter local listings if search query is entered
   if (query) {
     list = list.filter(r => 
@@ -1488,14 +1490,8 @@ window.fetchUserDashboardData = async function() {
   // Render rows
   if (list.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:24px; color:#64748b;">No request records found matching active filters.</td></tr>`;
-    updateCitizenStats(0, 0, 0);
     return;
   }
-  
-  let total = list.length;
-  let active = list.filter(r => r.status !== 'Resolved' && r.status !== 'Closed' && r.status !== 'Session Completed').length;
-  let resolved = total - active;
-  updateCitizenStats(total, active, resolved);
 
   tbody.innerHTML = list.map(r => {
     let trackingCol = `<button class="admin-btn" style="padding:4px 8px; font-size:10.5px;" onclick="trackActiveTicket('${r.id}', '')">🔍 Track</button>`;
@@ -1559,21 +1555,54 @@ window.fetchUserDashboardData = async function() {
   }).join('');
 };
 
-function updateCitizenStats(total, active, resolved) {
-  // Update profile card stats
-  const totalEl = document.getElementById('u-total-num');
-  const pendingEl = document.getElementById('u-pending-num');
-  const resolvedEl = document.getElementById('u-resolved-num');
+async function updateCitizenStats() {
+  if (!currentSessionUser) return;
+
+  const email = currentSessionUser.email;
+  const modules = [
+    { table: 'complaints', key: MOCK_COMPLAINTS },
+    { table: 'ars_reports', key: MOCK_ARS_REPORTS },
+    { table: 'mhd_requests', key: MOCK_MHD_REQUESTS },
+    { table: 'counselling_bookings', key: MOCK_COUNSELLING_BOOKINGS },
+    { table: 'empowerment_applications', key: MOCK_EMPOWERMENT_APPLICATIONS },
+    { table: 'emergency_requests', key: MOCK_EMERGENCY_REQUESTS },
+    { table: 'callback_requests', key: MOCK_CALLBACK_REQUESTS }
+  ];
+  const resolvedStatuses = new Set(['Resolved', 'Closed', 'Completed', 'Session Completed']);
+  let records = [];
+
+  if (isSupabaseConfigured) {
+    const results = await Promise.all(modules.map(module =>
+      supabase.from(module.table).select('id, status, district, created_at').eq('email', email)
+    ));
+    records = results.flatMap(result => result.data || []);
+  } else {
+    records = modules.flatMap(module =>
+      JSON.parse(localStorage.getItem(module.key) || '[]').filter(r => r.email === email)
+    );
+  }
+
+  const total = records.length;
+  const resolved = records.filter(r => resolvedStatuses.has(r.status)).length;
+  const active = total - resolved;
+
+  const totalEl = document.getElementById('citizenTotalNum');
+  const pendingEl = document.getElementById('citizenActiveNum');
+  const resolvedEl = document.getElementById('citizenResolvedNum');
   if (totalEl) totalEl.textContent = total;
   if (pendingEl) pendingEl.textContent = active;
   if (resolvedEl) resolvedEl.textContent = resolved;
   
-  // Show profile card if user is logged in
   const profileCard = document.getElementById('citizenProfileCard');
   const profileEmail = document.getElementById('citizenProfileEmail');
+  const profileDistrict = document.getElementById('citizenProfileDistrict');
   if (profileCard && currentSessionUser) {
     profileCard.style.display = 'flex';
     if (profileEmail) profileEmail.textContent = currentSessionUser.email;
+    if (profileDistrict) {
+      const district = records.find(r => r.district)?.district || 'Etawah';
+      profileDistrict.textContent = `Registered Citizen — ${district} District`;
+    }
   }
 }
 

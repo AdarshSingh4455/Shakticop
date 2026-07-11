@@ -304,6 +304,76 @@ footer{background:var(--navy);color:rgba(255,255,255,.5);padding:28px 24px}
 .dash-num { font-size: 24px; font-weight: 800; font-family: 'Syne', sans-serif; margin-bottom: 4px; }
 .dash-lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
 
+.citizen-profile-card{
+  background:linear-gradient(135deg, var(--navy) 0%, #1e0a26 100%);
+  border:1px solid rgba(230,73,128,0.2);
+  border-radius:12px;
+  padding:16px 20px;
+  display:none;
+  margin-bottom:0;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  width:100%;
+}
+.citizen-profile-main{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.citizen-profile-avatar{
+  width:44px;
+  height:44px;
+  background:rgba(230,73,128,0.15);
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  flex:0 0 auto;
+}
+.citizen-profile-copy{
+  min-width:0;
+}
+.citizen-profile-email{
+  color:#fff;
+  font-weight:700;
+  font-size:14px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.citizen-profile-district{
+  color:#a3b1cc;
+  font-size:11px;
+}
+.citizen-profile-stats{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(82px, 1fr));
+  gap:8px;
+  min-width:300px;
+}
+.citizen-profile-stat{
+  text-align:center;
+  background:rgba(255,255,255,0.05);
+  border-radius:8px;
+  padding:8px 12px;
+  min-width:0;
+}
+.citizen-profile-num{
+  font-weight:800;
+  font-size:20px;
+  line-height:1.1;
+}
+.citizen-profile-num.total{ color:#e64980; }
+.citizen-profile-num.active{ color:#f59e0b; }
+.citizen-profile-num.resolved{ color:#10b981; }
+.citizen-profile-label{
+  color:#a3b1cc;
+  font-size:10px;
+  margin-top:3px;
+}
+
 /* VEHICLE TRACKING (OLA/UBER) */
 .cab-tracker { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 15px 40px rgba(0,0,0,0.15); margin-top: 16px; border: 1px solid #e2e8f0; }
 .cab-map-area { background: #e2e8f0; height: 140px; position: relative; overflow: hidden; border-bottom: 2px solid var(--pink); }
@@ -1746,22 +1816,44 @@ nav a:focus-visible,
   #userDashboard{
     gap:14px !important;
   }
-  .dashboard-stats{
-    display:flex;
-    overflow-x:auto;
-    scroll-snap-type:x mandatory;
-    gap:10px;
-    margin-top:0;
-    padding:2px 2px 8px;
+  .citizen-profile-card{
+    padding:13px;
+    flex-direction:column;
+    align-items:stretch;
+    gap:12px;
+    overflow:hidden;
   }
-  .dash-stat-card{
-    flex:0 0 72%;
-    min-height:96px;
-    padding:14px;
-    scroll-snap-align:start;
+  .citizen-profile-main{
+    width:100%;
   }
-  .dash-num{
-    font-size:22px;
+  .citizen-profile-avatar{
+    width:40px;
+    height:40px;
+    font-size:17px;
+  }
+  .citizen-profile-email{
+    font-size:13px;
+    max-width:100%;
+  }
+  .citizen-profile-district{
+    font-size:10.5px;
+  }
+  .citizen-profile-stats{
+    width:100%;
+    min-width:0;
+    grid-template-columns:repeat(3, minmax(0, 1fr));
+    gap:7px;
+  }
+  .citizen-profile-stat{
+    padding:8px 6px;
+  }
+  .citizen-profile-num{
+    font-size:18px;
+    text-align:center;
+  }
+  .citizen-profile-label{
+    font-size:9.5px;
+    text-align:center;
   }
   .user-dash-container{
     display:block;
