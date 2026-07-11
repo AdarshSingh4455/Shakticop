@@ -86,6 +86,8 @@ const MOCK_NOTIFICATIONS = 'mock_notifications';
 const MOCK_CATEGORIES = 'mock_categories';
 const MOCK_LOGS = 'mock_logs';
 const LOCAL_SESSION_KEY = 'shakticop_current_session_user';
+const DEMO_ADMIN_EMAIL = 'adarsh004455@gmail.com';
+const DEMO_ADMIN_PASSWORD = 'admin@098';
 
 // Pagination variables
 let adminPageSize = 10;
@@ -536,13 +538,14 @@ window.handleLoginSubmit = async function() {
   if (!email || !password) return;
   setLoginLoading(true);
 
-  if (email === 'adarsh004455@gmail.com' && password === 'admin@098') {
+  if (email === DEMO_ADMIN_EMAIL && password === DEMO_ADMIN_PASSWORD) {
     currentSessionUser = {
-      email: 'adarsh004455@gmail.com',
+      email: DEMO_ADMIN_EMAIL,
       role: 'admin',
       full_name: 'System Administrator'
     };
     localStorage.setItem(LOCAL_SESSION_KEY, JSON.stringify(currentSessionUser));
+    await hydrateDemoAdminSupabaseSession();
     showToast('Logged in successfully.', 'success');
     postLoginAction();
     return;
@@ -612,7 +615,7 @@ window.handleLoginSubmit = async function() {
     }
   } else {
     // Simulator Login
-    const roleVal = (email === 'adarsh004455@gmail.com' && password === 'admin@098') ? 'admin' : 'user';
+    const roleVal = (email === DEMO_ADMIN_EMAIL && password === DEMO_ADMIN_PASSWORD) ? 'admin' : 'user';
     
     // Check credentials if admin or standard bypass password user@123
     if (roleVal === 'admin') {
@@ -666,8 +669,7 @@ function postLoginAction() {
       badge.style.color = isSupabaseConfigured ? '#10b981' : '#ef4444';
       badge.style.border = isSupabaseConfigured ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(239,68,68,0.3)';
     }
-    switchAdminTab('dash');
-    preloadAdminSessionData();
+    initializeAdminDashboard();
     subscribeRealtimeEventsAdmin();
   } else {
     switchTab('dashboard');
@@ -680,7 +682,42 @@ function postLoginAction() {
   loadAnnouncementBar();
 }
 
-function preloadAdminSessionData() {
+async function hydrateDemoAdminSupabaseSession() {
+  if (!isSupabaseConfigured || !supabase) return;
+
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    let demoUser = session?.user?.email === DEMO_ADMIN_EMAIL ? session.user : null;
+
+    if (!demoUser) {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: DEMO_ADMIN_EMAIL,
+        password: DEMO_ADMIN_PASSWORD
+      });
+
+      if (error) {
+        console.warn('Demo admin Supabase session hydration skipped:', error.message);
+        return;
+      }
+      demoUser = data.user;
+    }
+
+    if (!demoUser?.id) return;
+    const { error: profileError } = await supabase.from('profiles').upsert({
+      id: demoUser.id,
+      email: DEMO_ADMIN_EMAIL,
+      role: 'admin',
+      full_name: 'System Administrator'
+    }, { onConflict: 'id' });
+
+    if (profileError) console.error(profileError);
+  } catch (err) {
+    console.warn('Demo admin Supabase session hydration unavailable:', err.message);
+  }
+}
+
+function initializeAdminDashboard() {
+  switchAdminTab('dash');
   setTimeout(() => {
     Promise.allSettled([
       renderGeneralDashboardOverview(),
@@ -697,7 +734,7 @@ function preloadAdminSessionData() {
   }, 0);
 }
 
-function restoreLocalSession() {
+async function restoreLocalSession() {
   const rawSession = localStorage.getItem(LOCAL_SESSION_KEY);
   if (!rawSession) return false;
 
@@ -705,6 +742,9 @@ function restoreLocalSession() {
     const sessionUser = JSON.parse(rawSession);
     if (!sessionUser || !sessionUser.email || !sessionUser.role) return false;
     currentSessionUser = sessionUser;
+    if (currentSessionUser.email === DEMO_ADMIN_EMAIL && currentSessionUser.role === 'admin') {
+      await hydrateDemoAdminSupabaseSession();
+    }
     postLoginAction();
     return true;
   } catch (err) {
@@ -1844,18 +1884,24 @@ async function renderGeneralDashboardOverview() {
   let counts = { total: 0, pending: 0, sos: 0 };
   
   if (isSupabaseConfigured) {
-    const { count: arsCount } = await supabase.from('ars_reports').select('*', { count: 'exact', head: true });
-    const { count: mhdCount } = await supabase.from('mhd_requests').select('*', { count: 'exact', head: true });
-    const { count: cnsCount } = await supabase.from('counselling_bookings').select('*', { count: 'exact', head: true });
-    const { count: empCount } = await supabase.from('empowerment_applications').select('*', { count: 'exact', head: true });
-    const { count: sosCount } = await supabase.from('emergency_requests').select('*', { count: 'exact', head: true });
-    const { count: compCount } = await supabase.from('complaints').select('*', { count: 'exact', head: true });
+    const { count: arsCount, error: arsCountError } = await supabase.from('ars_reports').select('*', { count: 'exact', head: true });
+    const { count: mhdCount, error: mhdCountError } = await supabase.from('mhd_requests').select('*', { count: 'exact', head: true });
+    const { count: cnsCount, error: cnsCountError } = await supabase.from('counselling_bookings').select('*', { count: 'exact', head: true });
+    const { count: empCount, error: empCountError } = await supabase.from('empowerment_applications').select('*', { count: 'exact', head: true });
+    const { count: sosCount, error: sosCountError } = await supabase.from('emergency_requests').select('*', { count: 'exact', head: true });
+    const { count: compCount, error: compCountError } = await supabase.from('complaints').select('*', { count: 'exact', head: true });
+    [arsCountError, mhdCountError, cnsCountError, empCountError, sosCountError, compCountError].forEach(error => {
+      if (error) console.error(error);
+    });
     
     // Active states query
-    const { count: arsP } = await supabase.from('ars_reports').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Resolved');
-    const { count: mhdP } = await supabase.from('mhd_requests').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Resolved');
-    const { count: cnsP } = await supabase.from('counselling_bookings').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Session Completed');
-    const { count: sosP } = await supabase.from('emergency_requests').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Resolved');
+    const { count: arsP, error: arsPendingError } = await supabase.from('ars_reports').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Resolved');
+    const { count: mhdP, error: mhdPendingError } = await supabase.from('mhd_requests').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Resolved');
+    const { count: cnsP, error: cnsPendingError } = await supabase.from('counselling_bookings').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Session Completed');
+    const { count: sosP, error: sosPendingError } = await supabase.from('emergency_requests').select('*', { count: 'exact', head: true }).not('status', 'eq', 'Resolved');
+    [arsPendingError, mhdPendingError, cnsPendingError, sosPendingError].forEach(error => {
+      if (error) console.error(error);
+    });
     
     counts.total = (arsCount || 0) + (mhdCount || 0) + (cnsCount || 0) + (empCount || 0) + (sosCount || 0) + (compCount || 0);
     counts.pending = (arsP || 0) + (mhdP || 0) + (cnsP || 0) + (sosP || 0);
@@ -1949,9 +1995,12 @@ window.fetchARSAdmin = async function() {
   
   let list = [];
   if (isSupabaseConfigured) {
+    console.log('Loading ARS...');
     let q = supabase.from('ars_reports').select('*, assigned_officer_id(name)');
     if (status) q = q.eq('status', status);
-    const { data } = await q.order('created_at', { ascending: false });
+    const { data, error } = await q.order('created_at', { ascending: false });
+    if (error) console.error(error);
+    console.log('ARS rows:', data || []);
     list = data || [];
   } else {
     list = JSON.parse(localStorage.getItem(MOCK_ARS_REPORTS) || '[]');
@@ -2001,9 +2050,12 @@ window.fetchMHDAdmin = async function() {
   
   let list = [];
   if (isSupabaseConfigured) {
+    console.log('Loading MHD...');
     let q = supabase.from('mhd_requests').select('*, assigned_officer_id(name)');
     if (status) q = q.eq('status', status);
-    const { data } = await q.order('created_at', { ascending: false });
+    const { data, error } = await q.order('created_at', { ascending: false });
+    if (error) console.error(error);
+    console.log('MHD rows:', data || []);
     list = data || [];
   } else {
     list = JSON.parse(localStorage.getItem(MOCK_MHD_REQUESTS) || '[]');
@@ -2053,9 +2105,12 @@ window.fetchCNSAdmin = async function() {
   
   let list = [];
   if (isSupabaseConfigured) {
+    console.log('Loading Counselling...');
     let q = supabase.from('counselling_bookings').select('*, assigned_counsellor_id(name)');
     if (status) q = q.eq('status', status);
-    const { data } = await q.order('created_at', { ascending: false });
+    const { data, error } = await q.order('created_at', { ascending: false });
+    if (error) console.error(error);
+    console.log('Counselling rows:', data || []);
     list = data || [];
   } else {
     list = JSON.parse(localStorage.getItem(MOCK_COUNSELLING_BOOKINGS) || '[]');
@@ -2105,9 +2160,12 @@ window.fetchEmpowerAdmin = async function() {
   
   let list = [];
   if (isSupabaseConfigured) {
+    console.log('Loading Empowerment...');
     let q = supabase.from('empowerment_applications').select('*');
     if (status) q = q.eq('status', status);
-    const { data } = await q.order('created_at', { ascending: false });
+    const { data, error } = await q.order('created_at', { ascending: false });
+    if (error) console.error(error);
+    console.log('Empowerment rows:', data || []);
     list = data || [];
   } else {
     list = JSON.parse(localStorage.getItem(MOCK_EMPOWERMENT_APPLICATIONS) || '[]');
@@ -2821,7 +2879,10 @@ window.fetchEmergencySOSAdmin = async function() {
   
   let list = [];
   if (isSupabaseConfigured) {
-    const { data } = await supabase.from('emergency_requests').select('*').order('created_at', { ascending: false });
+    console.log('Loading Emergency...');
+    const { data, error } = await supabase.from('emergency_requests').select('*').order('created_at', { ascending: false });
+    if (error) console.error(error);
+    console.log('Emergency rows:', data || []);
     list = data || [];
   } else {
     list = JSON.parse(localStorage.getItem(MOCK_EMERGENCY_REQUESTS) || '[]');
@@ -2913,6 +2974,7 @@ window.initAnalyticsCharts = async function() {
   let arsData = [], mhdData = [], cnsData = [], sosData = [], compData = [], empData = [];
   
   if (isSupabaseConfigured) {
+    console.log('Loading Analytics...');
     const [a, b, c, d, e, f] = await Promise.all([
       supabase.from('ars_reports').select('status, district, created_at'),
       supabase.from('mhd_requests').select('status, district, created_at'),
@@ -2921,8 +2983,12 @@ window.initAnalyticsCharts = async function() {
       supabase.from('complaints').select('status, category, district, created_at'),
       supabase.from('empowerment_applications').select('status, district, created_at')
     ]);
+    [a, b, c, d, e, f].forEach(result => {
+      if (result.error) console.error(result.error);
+    });
     arsData = a.data || []; mhdData = b.data || []; cnsData = c.data || [];
     sosData = d.data || []; compData = e.data || []; empData = f.data || [];
+    console.log('Analytics loaded');
   } else {
     arsData = JSON.parse(localStorage.getItem(MOCK_ARS_REPORTS) || '[]');
     mhdData = JSON.parse(localStorage.getItem(MOCK_MHD_REQUESTS) || '[]');
@@ -3116,10 +3182,13 @@ window.runReportsQuery = async function() {
 
   let list = [];
   if (isSupabaseConfigured) {
+    console.log(`Loading Reports: ${moduleTable}...`);
     let q = supabase.from(moduleTable).select('*');
     if (district) q = q.eq('district', district);
     if (status) q = q.eq('status', status);
-    const { data } = await q.order('created_at', { ascending: false });
+    const { data, error } = await q.order('created_at', { ascending: false });
+    if (error) console.error(error);
+    console.log('Reports rows:', data || []);
     list = data || [];
   } else {
     let key = '';
@@ -3683,11 +3752,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   seedSimulatorIfNeeded();
   initMobileUx();
   applyLanguage();
-  if (!restoreLocalSession()) {
+  if (!(await restoreLocalSession())) {
     switchTab('shakti');
   }
 });
