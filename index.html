@@ -298,6 +298,7 @@
       <li class="admin-menu-item" id="menu-counsel"><a href="#" onclick="switchAdminTab('counsel');return false;">💬 Counselling</a></li>
       <li class="admin-menu-item" id="menu-empower"><a href="#" onclick="switchAdminTab('empower');return false;">💪 Women Empowerment</a></li>
       <li class="admin-menu-item" id="menu-officers"><a href="#" onclick="switchAdminTab('officers');return false;">👮 Female Officers</a></li>
+      <li class="admin-menu-item" id="menu-counsellors"><a href="#" onclick="switchAdminTab('counsellors');return false;">💬 Counsellors</a></li>
       <li class="admin-menu-item" id="menu-emergency"><a href="#" onclick="switchAdminTab('emergency');return false;">🚨 Emergency Requests</a></li>
       <li class="admin-menu-item" id="menu-contacts"><a href="#" onclick="switchAdminTab('contacts');return false;">📞 Emergency Contacts</a></li>
       <li class="admin-menu-item" id="menu-logs"><a href="#" onclick="switchAdminTab('logs');return false;">📜 Activity Logs</a></li>
@@ -574,6 +575,54 @@
                 </tr>
               </thead>
               <tbody id="adminOfficersTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- NEW. COUNSELLORS DIRECTORY -->
+      <div class="admin-subview" id="admin-view-counsellors" style="display:none;">
+        <div class="admin-section">
+          <div class="admin-section-header" style="flex-direction: column; align-items: stretch; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <h3 class="admin-chart-title" style="margin-bottom:0;">💬 Active Counsellors Database</h3>
+              <button class="admin-btn primary" onclick="openCounsellorModalAdd()">➕ Add New Counsellor</button>
+            </div>
+            <!-- Filters bar -->
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; width: 100%; margin-top: 10px;">
+              <input type="text" id="searchCounsellor" placeholder="Search by name, designation..." class="admin-input" style="max-width:240px;" oninput="fetchCounsellorsAdmin()"/>
+              <select id="filterCounsellorDistrict" class="admin-select" style="max-width:160px;" onchange="fetchCounsellorsAdmin()">
+                <option value="">All Districts</option>
+                <option value="Etawah">Etawah</option>
+                <option value="Lucknow">Lucknow</option>
+                <option value="Kanpur">Kanpur</option>
+                <option value="Agra">Agra</option>
+                <option value="Noida">Noida</option>
+              </select>
+              <select id="filterCounsellorStatus" class="admin-select" style="max-width:160px;" onchange="fetchCounsellorsAdmin()">
+                <option value="">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Designation</th>
+                  <th>Mobile</th>
+                  <th>Email</th>
+                  <th>District &amp; Station</th>
+                  <th>Availability</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminCounsellorsTableBody">
                 <!-- Dynamically populated -->
               </tbody>
             </table>
@@ -1416,6 +1465,75 @@
       </div>
       
       <button class="modal-btn" type="submit" style="background:var(--pink2); color:#fff; font-weight:700;">💾 Save Profile</button>
+    </form>
+  </div>
+</div>
+
+<!-- NEW. ADD/EDIT COUNSELLOR MODAL -->
+<div class="modal-overlay" id="modalCounsellorEdit">
+  <div class="modal-box" style="background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,0.15); width:100%; max-width:480px;">
+    <button class="modal-close" onclick="closeModal('modalCounsellorEdit')" style="color:#fff;">✕</button>
+    <div class="modal-title" id="counsellorModalTitle">💬 Edit Counsellor Profile</div>
+    <div class="modal-subtitle" style="color:#94a3b8;">Update name, designation, contact details, and district/station assignment.</div>
+    <form id="counsellorEditForm" onsubmit="event.preventDefault(); submitCounsellorForm();">
+      <input type="hidden" id="editCounsellorId"/>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Full Name</label>
+        <input type="text" id="eco-name" class="admin-input" required placeholder="e.g. Dr. Priya Sharma"/>
+      </div>
+      
+      <div class="modal-field">
+        <label style="color:#94a3b8;">Designation</label>
+        <input type="text" id="eco-designation" class="admin-input" required placeholder="e.g. Chief Counsellor"/>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Mobile Number</label>
+          <input type="tel" id="eco-mobile" class="admin-input" required placeholder="10-digit number" maxlength="10" oninput="this.value=this.value.replace(/\D/g,'')"/>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Email Address</label>
+          <input type="email" id="eco-email" class="admin-input" placeholder="counsellor@shakticop.gov.in"/>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">District</label>
+          <select id="eco-district" class="admin-select" required>
+            <option value="Etawah">Etawah</option>
+            <option value="Lucknow">Lucknow</option>
+            <option value="Kanpur">Kanpur</option>
+            <option value="Agra">Agra</option>
+            <option value="Noida">Noida</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Police Station Assignment</label>
+          <input type="text" id="eco-station" class="admin-input" required placeholder="e.g. Civil Lines PS"/>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Availability Status</label>
+          <select id="eco-availability" class="admin-select">
+            <option value="true">Active &amp; Available</option>
+            <option value="false">Unavailable</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label style="color:#94a3b8;">Status</label>
+          <select id="eco-status" class="admin-select">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+        </div>
+      </div>
+      
+      <button class="modal-btn" type="submit" style="background:var(--pink2); color:#fff; font-weight:700; width:100%; padding:12px; margin-top:16px;">💾 Save Counsellor</button>
     </form>
   </div>
 </div>

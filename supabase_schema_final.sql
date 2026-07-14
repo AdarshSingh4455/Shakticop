@@ -81,6 +81,21 @@ CREATE TABLE officers (
     UNIQUE (name, mobile)
 );
 
+-- C2. COUNSELLORS TABLE (Dedicated Counsellors Directory)
+CREATE TABLE counsellors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    designation TEXT,
+    mobile TEXT NOT NULL,
+    email TEXT,
+    district TEXT NOT NULL DEFAULT 'Etawah',
+    police_station TEXT,
+    availability BOOLEAN DEFAULT TRUE,
+    status TEXT NOT NULL CHECK (status IN ('Active', 'Inactive')) DEFAULT 'Active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE (name, mobile)
+);
+
 -- D. COMPLAINTS TABLE (Standard / Voice complaint, tracking prefix: SC)
 CREATE TABLE complaints (
     id TEXT PRIMARY KEY,
@@ -151,6 +166,7 @@ CREATE TABLE counselling_bookings (
     reason TEXT NOT NULL,
     status TEXT NOT NULL CHECK (status IN ('Application Received', 'Session Pending', 'Session Scheduled', 'Session Completed')) DEFAULT 'Application Received',
     assigned_counsellor_id UUID REFERENCES officers(id) ON DELETE SET NULL,
+    assigned_counsellor_name TEXT,
     session_date DATE,
     session_time TEXT,
     remarks TEXT,
@@ -441,6 +457,7 @@ END $$;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE officers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE counsellors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE complaints ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ars_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE mhd_requests ENABLE ROW LEVEL SECURITY;
@@ -482,6 +499,10 @@ CREATE POLICY "Categories: admin write" ON categories FOR ALL USING (is_admin())
 -- OFFICERS
 CREATE POLICY "Officers: public read" ON officers FOR SELECT USING (TRUE);
 CREATE POLICY "Officers: admin write" ON officers FOR ALL USING (is_admin());
+
+-- COUNSELLORS
+CREATE POLICY "Counsellors: select" ON counsellors FOR SELECT USING (TRUE);
+CREATE POLICY "Counsellors: admin manage" ON counsellors FOR ALL USING (is_admin());
 
 -- COMPLAINTS
 CREATE POLICY "Complaints: insert" ON complaints FOR INSERT WITH CHECK (TRUE);
@@ -589,12 +610,14 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Contacts (Emergency Helplines)
 INSERT INTO contacts (department, officer_name, designation, phone_number, photo_url, priority) VALUES
-('Mahila Helpdesk', 'Nodal Official CUG', 'Nodal Officer', '9454406780', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200', 10),
-('Emergency Response System', 'UP Police', 'Control Room', '112', 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=200', 9),
-('Anti Romeo Squad', 'SI Neha Singh', 'Squad Lead', '9454402121', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200', 8),
-('Counselling Center', 'Dr. Priya Sharma', 'Chief Counsellor', '9454408989', 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200', 7),
-('Designated Female Officer', 'ASI Pushpa Devi', 'Women Officer', '9454402122', 'https://images.unsplash.com/photo-1594744803329-e58b31de215f?auto=format&fit=crop&q=80&w=200', 6),
-('Cyber Crime Cell', 'Cyber Help Desk', 'Support', '1930', 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=200', 5)
+('Women Powerline', 'Nodal Officer', 'Emergency Helpline', '1090', '', 10),
+('Emergency', 'Nodal Officer', 'Emergency Helpline', '112', '', 9),
+('Ambulance', 'Nodal Officer', 'Emergency Helpline', '108', '', 8),
+('Fire', 'Nodal Officer', 'Emergency Helpline', '101', '', 7),
+('Cyber Crime', 'Nodal Officer', 'Emergency Helpline', '1930', '', 6),
+('Child Helpline', 'Nodal Officer', 'Emergency Helpline', '1098', '', 5),
+('CM Helpline', 'Nodal Officer', 'Emergency Helpline', '1076', '', 4),
+('Anti Corruption', 'Nodal Officer', 'Emergency Helpline', '1064', '', 3)
 ON CONFLICT (department, phone_number) DO NOTHING;
 
 -- Officers Database
@@ -606,6 +629,13 @@ INSERT INTO officers (name, photo_url, mobile, designation, station, district, e
 ('Dr. Priya Sharma', 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200', '9454408989', 'Chief Counsellor', 'District Hospital', 'Etawah', 'priya.sharma@uppolice.gov.in', 'counsellor'),
 ('Dr. Rekha Singh', 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200', '9454408990', 'Family Counsellor', 'One Stop Centre', 'Etawah', 'rekha.singh@uppolice.gov.in', 'counsellor'),
 ('Ms. Anita Verma', 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200', '9454408991', 'Legal Counsellor', 'Family Court', 'Etawah', 'anita.verma@uppolice.gov.in', 'counsellor')
+ON CONFLICT (name, mobile) DO NOTHING;
+
+-- Counsellors Database (Dedicated)
+INSERT INTO counsellors (name, designation, mobile, email, police_station, district, availability, status) VALUES
+('Dr. Priya Sharma', 'Chief Counsellor', '9454408989', 'priya.sharma@uppolice.gov.in', 'District Hospital', 'Etawah', TRUE, 'Active'),
+('Dr. Rekha Singh', 'Family Counsellor', '9454408990', 'rekha.singh@uppolice.gov.in', 'One Stop Centre', 'Etawah', TRUE, 'Active'),
+('Ms. Anita Verma', 'Legal Counsellor', '9454408991', 'anita.verma@uppolice.gov.in', 'Family Court', 'Etawah', TRUE, 'Active')
 ON CONFLICT (name, mobile) DO NOTHING;
 
 -- Schemes

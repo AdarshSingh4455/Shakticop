@@ -86,6 +86,30 @@ const MOCK_NOTIFICATIONS = 'mock_notifications';
 const MOCK_CATEGORIES = 'mock_categories';
 const MOCK_LOGS = 'mock_logs';
 
+const EMERGENCY_CONTACTS = [
+  { department: 'Women Powerline', phone_number: '1090', icon: '🚺' },
+  { department: 'Emergency', phone_number: '112', icon: '🚨' },
+  { department: 'Ambulance', phone_number: '108', icon: '🚑' },
+  { department: 'Fire', phone_number: '101', icon: '🚒' },
+  { department: 'Cyber Crime', phone_number: '1930', icon: '💻' },
+  { department: 'Child Helpline', phone_number: '1098', icon: '👶' },
+  { department: 'CM Helpline', phone_number: '1076', icon: '🏛️' },
+  { department: 'Anti Corruption', phone_number: '1064', icon: '⚖️' }
+];
+
+const DEFAULT_FEMALE_OFFICERS = [
+  { name: 'SI Neha Singh', designation: 'Sub-Inspector', station: 'Civil Lines PS', district: 'Etawah', mobile: '9454402121', email: 'neha.singh@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200' },
+  { name: 'ASI Pushpa Devi', designation: 'Assistant Sub-Inspector', station: 'Civil Lines PS', district: 'Etawah', mobile: '9454402122', email: 'pushpa.devi@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1594744803329-e58b31de215f?auto=format&fit=crop&q=80&w=200' },
+  { name: 'SI Sarita Yadav', designation: 'Sub-Inspector', station: 'Jaswantnagar PS', district: 'Etawah', mobile: '9454402123', email: 'sarita.yadav@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200' },
+  { name: 'ASI Poonam Shakya', designation: 'Assistant Sub-Inspector', station: 'Chakarnagar PS', district: 'Etawah', mobile: '9454402124', email: 'poonam.shakya@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=200' }
+];
+
+const DEFAULT_COUNSELLORS = [
+  { name: 'Dr. Priya Sharma', designation: 'Chief Counsellor', mobile: '9454408989', email: 'priya.sharma@uppolice.gov.in', police_station: 'District Hospital', district: 'Etawah', availability: true, status: 'Active' },
+  { name: 'Dr. Rekha Singh', designation: 'Family Counsellor', mobile: '9454408990', email: 'rekha.singh@uppolice.gov.in', police_station: 'One Stop Centre', district: 'Etawah', availability: true, status: 'Active' },
+  { name: 'Ms. Anita Verma', designation: 'Legal Counsellor', mobile: '9454408991', email: 'anita.verma@uppolice.gov.in', police_station: 'Family Court', district: 'Etawah', availability: true, status: 'Active' }
+];
+
 // Pagination variables
 let adminPageSize = 10;
 let adminCurrentPages = {
@@ -101,6 +125,19 @@ let adminCurrentPages = {
 // 3. SEED SIMULATOR DATA (If running in local simulator mode)
 function seedSimulatorIfNeeded() {
   if (isSupabaseConfigured) return;
+
+  const storedContacts = localStorage.getItem(MOCK_CONTACTS);
+  if (storedContacts) {
+    try {
+      const contacts = JSON.parse(storedContacts);
+      const depts = contacts.map(c => c.department);
+      if (depts.includes('Mahila Helpdesk') || depts.includes('Anti Romeo Squad') || depts.includes('Counselling Center') || contacts.length > 8) {
+        localStorage.removeItem(MOCK_CONTACTS);
+      }
+    } catch(e) {
+      localStorage.removeItem(MOCK_CONTACTS);
+    }
+  }
   
   if (!localStorage.getItem(MOCK_CATEGORIES)) {
     localStorage.setItem(MOCK_CATEGORIES, JSON.stringify([
@@ -115,24 +152,64 @@ function seedSimulatorIfNeeded() {
   }
   
   if (!localStorage.getItem(MOCK_CONTACTS)) {
-    localStorage.setItem(MOCK_CONTACTS, JSON.stringify([
-      { id: '1', department: 'Mahila Helpdesk', officer_name: 'Nodal Official CUG', designation: 'Nodal Officer', phone_number: '9454406780', photo_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200', availability: true, priority: 10 },
-      { id: '2', department: 'Emergency Support', officer_name: 'UP Police', designation: 'Control Room', phone_number: '112', photo_url: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=200', availability: true, priority: 9 },
-      { id: '3', department: 'Anti Romeo Squad', officer_name: 'SI Neha Singh', designation: 'Squad Lead', phone_number: '9454402121', photo_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200', availability: true, priority: 8 },
-      { id: '4', department: 'Counselling Center', officer_name: 'Dr. Priya Sharma', designation: 'Chief Counsellor', phone_number: '9454408989', photo_url: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200', availability: true, priority: 7 }
-    ]));
+    const list = EMERGENCY_CONTACTS.map((c, idx) => ({
+      id: String(idx + 1),
+      department: c.department,
+      officer_name: 'Nodal Officer',
+      designation: 'Emergency Helpline',
+      phone_number: c.phone_number,
+      photo_url: '',
+      availability: true,
+      priority: 10 - idx
+    }));
+    localStorage.setItem(MOCK_CONTACTS, JSON.stringify(list));
   }
 
   if (!localStorage.getItem(MOCK_OFFICERS)) {
-    localStorage.setItem(MOCK_OFFICERS, JSON.stringify([
-      { id: '1', name: 'SI Neha Singh', designation: 'Sub-Inspector', station: 'Civil Lines PS', district: 'Etawah', mobile: '9454402121', email: 'neha.singh@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200' },
-      { id: '2', name: 'ASI Pushpa Devi', designation: 'Assistant Sub-Inspector', station: 'Civil Lines PS', district: 'Etawah', mobile: '9454402122', email: 'pushpa.devi@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1594744803329-e58b31de215f?auto=format&fit=crop&q=80&w=200' },
-      { id: '3', name: 'SI Sarita Yadav', designation: 'Sub-Inspector', station: 'Jaswantnagar PS', district: 'Etawah', mobile: '9454402123', email: 'sarita.yadav@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=200' },
-      { id: '4', name: 'ASI Poonam Shakya', designation: 'Assistant Sub-Inspector', station: 'Chakarnagar PS', district: 'Etawah', mobile: '9454402124', email: 'poonam.shakya@uppolice.gov.in', availability: true, type: 'police', photo_url: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=200' },
-      { id: '5', name: 'Dr. Priya Sharma', designation: 'Chief Counsellor', station: 'District Hospital', district: 'Etawah', mobile: '9454408989', email: 'priya.sharma@uppolice.gov.in', availability: true, type: 'counsellor', photo_url: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=200' },
-      { id: '6', name: 'Dr. Rekha Singh', designation: 'Family Counsellor', station: 'One Stop Centre', district: 'Etawah', mobile: '9454408990', email: 'rekha.singh@uppolice.gov.in', availability: true, type: 'counsellor', photo_url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200' },
-      { id: '7', name: 'Ms. Anita Verma', designation: 'Legal Counsellor', station: 'Family Court', district: 'Etawah', mobile: '9454408991', email: 'anita.verma@uppolice.gov.in', availability: true, type: 'counsellor', photo_url: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=200' }
-    ]));
+    const list = DEFAULT_FEMALE_OFFICERS.map((o, idx) => ({
+      id: 'off-' + (idx + 1),
+      name: o.name,
+      designation: o.designation,
+      station: o.station,
+      district: o.district,
+      mobile: o.mobile,
+      email: o.email,
+      availability: true,
+      type: 'police',
+      photo_url: o.photo_url || ''
+    }));
+    // Add default counsellors as well for backward compatibility of officers table
+    DEFAULT_COUNSELLORS.forEach((c, idx) => {
+      list.push({
+        id: 'off-cns-' + (idx + 1),
+        name: c.name,
+        designation: c.designation,
+        station: c.police_station,
+        district: c.district,
+        mobile: c.mobile,
+        email: c.email,
+        availability: c.availability,
+        type: 'counsellor',
+        photo_url: ''
+      });
+    });
+    localStorage.setItem(MOCK_OFFICERS, JSON.stringify(list));
+  }
+
+  if (!localStorage.getItem('mock_counsellors')) {
+    const list = DEFAULT_COUNSELLORS.map((c, idx) => ({
+      id: 'cns-' + (idx + 1),
+      name: c.name,
+      designation: c.designation,
+      mobile: c.mobile,
+      email: c.email,
+      district: c.district,
+      police_station: c.police_station,
+      availability: c.availability,
+      status: c.status,
+      created_at: new Date().toISOString()
+    }));
+    localStorage.setItem('mock_counsellors', JSON.stringify(list));
   }
 
   if (!localStorage.getItem(MOCK_SCHEMES)) {
@@ -300,7 +377,8 @@ function buildSidebar() {
   const list = activePublicTab === 'shakti' ? [
     { id: 'safety', label: 'Safety & Emergency', icon: '🌸' },
     { id: 'support', label: 'Support & Legal', icon: '💬' },
-    { id: 'empower', label: 'Empowerment & Skills', icon: '🎓' }
+    { id: 'empower', label: 'Empowerment & Skills', icon: '🎓' },
+    { id: 'welfare', label: 'Welfare Schemes', icon: '🎀' }
   ] : [
     { id: 'fir', label: 'FIR & Complaints', icon: '📄' }
   ];
@@ -388,6 +466,15 @@ function buildContent() {
         { name: 'Jan Shikshan Sansthan', tag: 'Vocational training', desc: 'Free skills training and certifications for women.', action: "openEmpowerApplyModal('Jan Shikshan Sansthan')", icon: '🏫' },
         { name: 'Self Defence Training', tag: 'Workshops', desc: 'Free safety workshops and certification from police.', action: "openEmpowerApplyModal('Self Defence Training')", icon: '🥋' }
       ]
+    },
+    {
+      id: 'welfare', label: 'Welfare Schemes', icon: '🎀', accent: '#d6336c', iconBg: '#fff0f6',
+      items: [
+        { name: 'Kanya Sumangala Yojana', tag: 'Financial Aid', desc: 'Direct benefit transfer for girl child education & health.', url: 'https://mksy.up.gov.in', target: '_blank', icon: '👶' },
+        { name: 'Shadi Anudan Yojana', tag: 'Marriage Grant', desc: 'Financial assistance for marriages of daughters from poor families.', url: 'https://shadianudan.upsdc.gov.in', target: '_blank', icon: '💍' },
+        { name: 'Vidhwa Pension Scheme', tag: 'Widow Pension', desc: 'Social security and pension for destitute widows in UP.', url: 'https://sspy-up.gov.in', target: '_blank', icon: '👵' },
+        { name: 'Sakhi One Stop Centre', tag: 'Support Centre', desc: 'Integrated support services for women affected by violence.', url: 'https://missionshakti.up.gov.in', target: '_blank', icon: '🏢' }
+      ]
     }
   ] : [
     {
@@ -415,19 +502,25 @@ function buildContent() {
         <div class="cat-count">${cat.items.length} Services</div>
       </div>
       <div class="card-grid">
-        ${cat.items.map(item => `
-          <div class="svc-card" onclick="${item.url ? `window.location.href='${item.url}'` : item.action}" style="--card-accent: ${cat.accent}; --card-icon-bg: ${cat.iconBg}; --card-tag-bg: ${cat.iconBg}; --card-tag-color: ${cat.accent};">
-            <div class="svc-card-top">
-              <div class="svc-card-icon">${item.icon}</div>
-              <span class="svc-tag">${item.tag}</span>
+        ${cat.items.map(item => {
+          const clickHandler = item.url 
+            ? (item.target === '_blank' ? `window.open('${item.url}', '_blank', 'noopener,noreferrer')` : `window.location.href='${item.url}'`) 
+            : item.action;
+          const linkText = item.target === '_blank' ? 'Open Portal' : 'Proceed';
+          return `
+            <div class="svc-card" onclick="${clickHandler}" style="--card-accent: ${cat.accent}; --card-icon-bg: ${cat.iconBg}; --card-tag-bg: ${cat.iconBg}; --card-tag-color: ${cat.accent};">
+              <div class="svc-card-top">
+                <div class="svc-card-icon">${item.icon}</div>
+                <span class="svc-tag">${item.tag}</span>
+              </div>
+              <div class="svc-name">${item.name}</div>
+              <div class="svc-desc">${item.desc}</div>
+              <div class="svc-link">
+                ${linkText} <span style="margin-left:auto;">➔</span>
+              </div>
             </div>
-            <div class="svc-name">${item.name}</div>
-            <div class="svc-desc">${item.desc}</div>
-            <div class="svc-link">
-              Proceed <span style="margin-left:auto;">➔</span>
-            </div>
-          </div>
-        `).join('')}
+          `;
+        }).join('')}
       </div>
     </section>
   `).join('');
@@ -443,26 +536,96 @@ window.openEmpowerApplyModal = function(schemeName) {
   }
 };
 
+function getEmerIcon(dept) {
+  const d = dept.toLowerCase();
+  if (d.includes('women') || d.includes('powerline')) return '🚺';
+  if (d.includes('ambulance') || d.includes('108')) return '🚑';
+  if (d.includes('fire') || d.includes('101')) return '🚒';
+  if (d.includes('child') || d.includes('1098')) return '👶';
+  if (d.includes('cyber') || d.includes('1930')) return '💻';
+  if (d.includes('cm') || d.includes('1076')) return '🏛️';
+  if (d.includes('corruption') || d.includes('1064')) return '⚖️';
+  if (d.includes('emergency') || d.includes('112')) return '🚨';
+  return '🚨';
+}
+
 // Fetch Helpline Contacts
 async function fetchEmergencyContacts() {
   const container = document.getElementById('emerChips');
   if (!container) return;
   
   let list = [];
-  if (isSupabaseConfigured) {
-    const { data } = await supabase.from('contacts').select('*').order('priority', { ascending: false });
-    list = data || [];
-  } else {
-    list = JSON.parse(localStorage.getItem(MOCK_CONTACTS) || '[]');
+  try {
+    if (isSupabaseConfigured) {
+      const { data } = await supabase.from('contacts').select('*').order('priority', { ascending: false });
+      list = data || [];
+    } else {
+      list = JSON.parse(localStorage.getItem(MOCK_CONTACTS) || '[]');
+    }
+  } catch (err) {
+    console.error('fetchEmergencyContacts error:', err);
   }
   
-  container.innerHTML = list.map(c => `
-    <a href="tel:${c.phone_number}" class="emer-chip" aria-label="Call ${c.department} at ${c.phone_number}">
-      <span class="emer-icon">🚨</span>
-      <span class="emer-title">${c.department}</span>
-      <strong class="num">${c.phone_number}</strong>
-    </a>
-  `).join('');
+  const officialHelplinesMap = {
+    '1090': { department: 'Women Powerline', icon: '🚺' },
+    '112': { department: 'Emergency', icon: '🚨' },
+    '108': { department: 'Ambulance', icon: '🚑' },
+    '101': { department: 'Fire', icon: '🚒' },
+    '1930': { department: 'Cyber Crime', icon: '💻' },
+    '1098': { department: 'Child Helpline', icon: '👶' },
+    '1076': { department: 'CM Helpline', icon: '🏛️' },
+    '1064': { department: 'Anti Corruption', icon: '⚖️' }
+  };
+
+  const allowedNumbers = ['1090', '112', '108', '101', '1930', '1098', '1076', '1064'];
+  const seen = new Set();
+  let filteredList = [];
+  
+  for (const c of list) {
+    if (c && c.phone_number) {
+      const num = c.phone_number.trim();
+      if (allowedNumbers.includes(num) && !seen.has(num)) {
+        seen.add(num);
+        const official = officialHelplinesMap[num];
+        filteredList.push({
+          ...c,
+          department: official.department,
+          icon: official.icon
+        });
+      }
+    }
+  }
+  
+  if (filteredList.length === 0) {
+    filteredList = EMERGENCY_CONTACTS;
+  } else {
+    // Fill in any missing ones from the official list if they were not in the database response
+    for (const officialItem of EMERGENCY_CONTACTS) {
+      if (!seen.has(officialItem.phone_number)) {
+        filteredList.push(officialItem);
+      }
+    }
+  }
+  
+  // Sort list to match the exact order of allowedNumbers
+  filteredList.sort((a, b) => allowedNumbers.indexOf(a.phone_number) - allowedNumbers.indexOf(b.phone_number));
+  
+  container.innerHTML = filteredList.map(c => {
+    const icon = getEmerIcon(c.department);
+    return `
+      <div class="emer-chip-card">
+        <a href="tel:${c.phone_number}" class="emer-chip-main" aria-label="Call ${c.department} at ${c.phone_number}">
+          <span class="emer-icon">${icon}</span>
+          <div class="emer-details">
+            <span class="emer-title">${c.department}</span>
+            <strong class="num">${c.phone_number}</strong>
+          </div>
+          <div class="emer-call-btn">📞</div>
+        </a>
+        <button class="emer-copy-btn" onclick="navigator.clipboard.writeText('${c.phone_number}'); showToast('Number copied to clipboard!', 'success')" title="Copy Number">📋</button>
+      </div>
+    `;
+  }).join('');
 }
 
 // Search utility
@@ -1501,7 +1664,7 @@ window.fetchUserDashboardData = async function() {
     let detail2 = r.incident_date || r.preferred_date || r.created_at || 'N/A';
     
     if (currentUserDashTab === 'cns') {
-      const cname = r.assigned_counsellor_id ? (typeof r.assigned_counsellor_id === 'object' ? r.assigned_counsellor_id.name : 'Allotted Specialist') : 'Pending assignment';
+      const cname = r.assigned_counsellor_name || (r.assigned_counsellor_id ? (typeof r.assigned_counsellor_id === 'object' ? r.assigned_counsellor_id.name : 'Allotted Specialist') : 'Pending assignment');
       const slot = r.session_date ? `${r.session_date} at ${r.session_time}` : 'Unscheduled slot';
       return `
         <tr>
@@ -1778,6 +1941,7 @@ window.switchAdminTab = function(tabName) {
     counsel: '💬 Counselling bookings & calendar',
     empower: '💪 Empowerment JSS Applications',
     officers: '👮 Female Officers Database',
+    counsellors: '👤 Counsellors Directory',
     emergency: '🚨 Emergency SOS Distress Alerts',
     contacts: '📞 Public Helplines Cards',
     logs: '📜 System Audit Trail',
@@ -1793,6 +1957,7 @@ window.switchAdminTab = function(tabName) {
   if (tabName === 'counsel') fetchCNSAdmin();
   if (tabName === 'empower') fetchEmpowerAdmin();
   if (tabName === 'officers') fetchOfficersAdmin();
+  if (tabName === 'counsellors') fetchCounsellorsAdmin();
   if (tabName === 'emergency') fetchEmergencySOSAdmin();
   if (tabName === 'contacts') fetchContactsAdmin();
   if (tabName === 'logs') fetchLogsAdmin();
@@ -2045,7 +2210,7 @@ window.fetchCNSAdmin = async function() {
   }
   
   tbody.innerHTML = list.map(r => {
-    const cname = r.assigned_counsellor_id ? (typeof r.assigned_counsellor_id === 'object' ? r.assigned_counsellor_id.name : 'Specialist Counsellor') : 'Not Assigned';
+    const cname = r.assigned_counsellor_name || (r.assigned_counsellor_id ? (typeof r.assigned_counsellor_id === 'object' ? r.assigned_counsellor_id.name : 'Specialist Counsellor') : 'Not Assigned');
     const schedule = r.session_date ? `${r.session_date} at ${r.session_time}` : 'Pending Slot Allocation';
     return `
       <tr>
@@ -2387,14 +2552,14 @@ window.openCounselActionModal = async function(id) {
   
   let list = [];
   if (isSupabaseConfigured) {
-    const { data } = await supabase.from('officers').select('*').eq('type', 'counsellor');
+    const { data } = await supabase.from('counsellors').select('*');
     list = data || [];
   } else {
-    list = JSON.parse(localStorage.getItem(MOCK_OFFICERS) || '[]').filter(o => o.type === 'counsellor');
+    list = JSON.parse(localStorage.getItem('mock_counsellors') || '[]');
   }
   
   list.forEach(c => {
-    cSel.innerHTML += `<option value="${c.id}">${c.name} (${c.designation} - ${c.station})</option>`;
+    cSel.innerHTML += `<option value="${c.id}">${c.name} (${c.designation} - ${c.district})</option>`;
   });
   
   // Set current slot
@@ -2431,19 +2596,19 @@ window.submitCounselActionForm = async function() {
   }
   
   let cname = '';
-  let list = [];
   if (isSupabaseConfigured) {
-    const { data } = await supabase.from('officers').select('name').eq('id', cId).single();
+    const { data } = await supabase.from('counsellors').select('name').eq('id', cId).single();
     if (data) cname = data.name;
   } else {
-    list = JSON.parse(localStorage.getItem(MOCK_OFFICERS) || '[]');
-    const c = list.find(x => x.id === cId);
+    const cnsList = JSON.parse(localStorage.getItem('mock_counsellors') || '[]');
+    const c = cnsList.find(x => x.id === cId);
     if (c) cname = c.name;
   }
   
   if (isSupabaseConfigured) {
     await supabase.from('counselling_bookings').update({
       assigned_counsellor_id: cId,
+      assigned_counsellor_name: cname,
       session_date: date,
       session_time: time,
       status: status,
@@ -2454,6 +2619,7 @@ window.submitCounselActionForm = async function() {
     const b = bookings.find(x => x.id === id);
     if (b) {
       b.assigned_counsellor_id = cId;
+      b.assigned_counsellor_name = cname;
       b.session_date = date;
       b.session_time = time;
       b.status = status;
@@ -2643,6 +2809,202 @@ window.deleteOfficer = async function(id) {
   
   showToast("Profile deleted successfully.", "success");
   fetchOfficersAdmin();
+};
+
+// Counsellors CRUD
+window.fetchCounsellorsAdmin = async function() {
+  const tbody = document.getElementById('adminCounsellorsTableBody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;"><div class="skeleton" style="height:35px; width:100%;"></div></td></tr>';
+  
+  let list = [];
+  if (isSupabaseConfigured) {
+    const { data } = await supabase.from('counsellors').select('*').order('created_at', { ascending: false });
+    list = data || [];
+  } else {
+    list = JSON.parse(localStorage.getItem('mock_counsellors') || '[]');
+  }
+
+  const query = document.getElementById('searchCounsellor')?.value.toLowerCase().trim() || '';
+  const dist = document.getElementById('filterCounsellorDistrict')?.value || '';
+  const status = document.getElementById('filterCounsellorStatus')?.value || '';
+
+  if (query) {
+    list = list.filter(c => 
+      c.name.toLowerCase().includes(query) ||
+      (c.designation && c.designation.toLowerCase().includes(query)) ||
+      c.mobile.includes(query)
+    );
+  }
+  if (dist) {
+    list = list.filter(c => c.district === dist);
+  }
+  if (status) {
+    list = list.filter(c => c.status === status);
+  }
+
+  tbody.innerHTML = list.map(c => `
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td>${c.designation || 'Counsellor'}</td>
+      <td>${c.mobile}</td>
+      <td>${c.email || '-'}</td>
+      <td>${c.police_station || '-'} (${c.district})</td>
+      <td>
+        <span class="admin-badge status-pending" style="background:${c.availability ? '#10b981' : '#ef4444'}1A; color:${c.availability ? '#10b981' : '#ef4444'};">
+          ${c.availability ? 'Available' : 'Unavailable'}
+        </span>
+      </td>
+      <td>
+        <span class="admin-badge ${c.status === 'Active' ? 'status-resolved' : 'status-rejected'}">
+          ${c.status}
+        </span>
+      </td>
+      <td>
+        <div style="display:flex; gap:6px;">
+          <button class="admin-btn" style="padding:4px 8px; font-size:11px;" onclick="openCounsellorModalEdit('${c.id}')">✏️ Edit</button>
+          <button class="admin-btn danger" style="padding:4px 8px; font-size:11px;" onclick="deleteCounsellor('${c.id}')">🗑️ Delete</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+};
+
+window.openCounsellorModalAdd = function() {
+  const modal = document.getElementById('modalCounsellorEdit');
+  if (!modal) return;
+  
+  document.getElementById('counsellorModalTitle').textContent = '💬 Add New Counsellor';
+  document.getElementById('editCounsellorId').value = '';
+  document.getElementById('counsellorEditForm').reset();
+  modal.classList.add('open');
+};
+
+window.openCounsellorModalEdit = async function(id) {
+  const modal = document.getElementById('modalCounsellorEdit');
+  if (!modal) return;
+  
+  document.getElementById('counsellorModalTitle').textContent = '💬 Edit Counsellor Profile';
+  document.getElementById('editCounsellorId').value = id;
+  
+  let c = null;
+  if (isSupabaseConfigured) {
+    const { data } = await supabase.from('counsellors').select('*').eq('id', id).single();
+    c = data;
+  } else {
+    c = JSON.parse(localStorage.getItem('mock_counsellors') || '[]').find(x => x.id === id);
+  }
+  
+  if (c) {
+    document.getElementById('eco-name').value = c.name;
+    document.getElementById('eco-designation').value = c.designation || '';
+    document.getElementById('eco-mobile').value = c.mobile;
+    document.getElementById('eco-email').value = c.email || '';
+    document.getElementById('eco-district').value = c.district;
+    document.getElementById('eco-station').value = c.police_station || '';
+    document.getElementById('eco-availability').value = c.availability ? 'true' : 'false';
+    document.getElementById('eco-status').value = c.status;
+  }
+  
+  modal.classList.add('open');
+};
+
+window.submitCounsellorForm = async function() {
+  const id = document.getElementById('editCounsellorId').value;
+  const name = document.getElementById('eco-name').value.trim();
+  const designation = document.getElementById('eco-designation').value.trim();
+  const mobile = document.getElementById('eco-mobile').value.trim();
+  const email = document.getElementById('eco-email').value.trim();
+  const district = document.getElementById('eco-district').value;
+  const police_station = document.getElementById('eco-station').value.trim();
+  const availability = document.getElementById('eco-availability').value === 'true';
+  const status = document.getElementById('eco-status').value;
+  
+  if (!name || !designation || !mobile || !police_station) {
+    showToast("Please fill out required fields.", "warning");
+    return;
+  }
+  
+  const payloadCns = {
+    name, designation, mobile, email, district, police_station, availability, status
+  };
+  
+  const payloadOff = {
+    name, type: 'counsellor', designation, mobile, email, district, station: police_station, availability, photo_url: ''
+  };
+  
+  if (isSupabaseConfigured) {
+    try {
+      if (id) {
+        // Update both tables
+        await supabase.from('counsellors').update(payloadCns).eq('id', id);
+        await supabase.from('officers').update(payloadOff).eq('id', id);
+        showToast("Counsellor profile updated successfully.", "success");
+      } else {
+        // Insert into officers first to get the generated UUID
+        const { data: offData, error: offErr } = await supabase.from('officers').insert(payloadOff).select('id').single();
+        if (offErr) throw offErr;
+        
+        // Insert into counsellors using the same UUID
+        const { error: cnsErr } = await supabase.from('counsellors').insert({ id: offData.id, ...payloadCns });
+        if (cnsErr) throw cnsErr;
+        
+        showToast("New counsellor profile added.", "success");
+      }
+    } catch (err) {
+      console.error('submitCounsellorForm DB error:', err);
+      showToast(`Database error: ${err.message}`, "error");
+    }
+  } else {
+    // Simulator Dual Writes
+    const cnsList = JSON.parse(localStorage.getItem('mock_counsellors') || '[]');
+    const offList = JSON.parse(localStorage.getItem(MOCK_OFFICERS) || '[]');
+    
+    if (id) {
+      const cIdx = cnsList.findIndex(x => x.id === id);
+      if (cIdx !== -1) cnsList[cIdx] = { id, ...payloadCns, created_at: cnsList[cIdx].created_at };
+      
+      const oIdx = offList.findIndex(x => x.id === id);
+      if (oIdx !== -1) offList[oIdx] = { id, ...payloadOff };
+      
+      showToast("Counsellor profile updated successfully.", "success");
+    } else {
+      const newId = 'cns-' + Math.floor(Math.random()*10000);
+      cnsList.push({ id: newId, ...payloadCns, created_at: new Date().toISOString() });
+      offList.push({ id: newId, ...payloadOff });
+      showToast("New counsellor profile added.", "success");
+    }
+    localStorage.setItem('mock_counsellors', JSON.stringify(cnsList));
+    localStorage.setItem(MOCK_OFFICERS, JSON.stringify(offList));
+  }
+  
+  closeModal('modalCounsellorEdit');
+  fetchCounsellorsAdmin();
+};
+
+window.deleteCounsellor = async function(id) {
+  if (!confirm("Are you sure you want to remove this counsellor?")) return;
+  
+  if (isSupabaseConfigured) {
+    try {
+      // Delete from both tables
+      await supabase.from('counsellors').delete().eq('id', id);
+      await supabase.from('officers').delete().eq('id', id);
+      showToast("Counsellor profile deleted successfully.", "success");
+    } catch (err) {
+      console.error('deleteCounsellor DB error:', err);
+      showToast(`Database error: ${err.message}`, "error");
+    }
+  } else {
+    const cnsList = JSON.parse(localStorage.getItem('mock_counsellors') || '[]');
+    const offList = JSON.parse(localStorage.getItem(MOCK_OFFICERS) || '[]');
+    
+    localStorage.setItem('mock_counsellors', JSON.stringify(cnsList.filter(x => x.id !== id)));
+    localStorage.setItem(MOCK_OFFICERS, JSON.stringify(offList.filter(x => x.id !== id)));
+    showToast("Counsellor profile deleted successfully.", "success");
+  }
+  
+  fetchCounsellorsAdmin();
 };
 
 // Helpline Contacts CRUD
@@ -3135,7 +3497,7 @@ window.runReportsQuery = async function() {
       col4 = r.police_station;
     } else if (moduleTable === 'counselling_bookings') {
       col2 = r.name;
-      col3 = r.assigned_counsellor_id || 'Pending assignment';
+      col3 = r.assigned_counsellor_name || r.assigned_counsellor_id || 'Pending assignment';
       col4 = r.session_date ? `${r.session_date} ${r.session_time}` : 'Pending Scheduling';
       col6 = r.preferred_date;
     } else if (moduleTable === 'empowerment_applications') {
@@ -3653,8 +4015,80 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-document.addEventListener('DOMContentLoaded', () => {
+async function seedDatabaseIfNeeded() {
+  if (!isSupabaseConfigured) return;
+  
+  try {
+    // 1. Upsert emergency contacts
+    console.log('Upserting emergency contacts into Supabase...');
+    const contactsToInsert = EMERGENCY_CONTACTS.map((c, idx) => ({
+      department: c.department,
+      officer_name: 'Nodal Officer',
+      designation: 'Emergency Helpline',
+      phone_number: c.phone_number,
+      photo_url: '',
+      priority: 10 - idx
+    }));
+    await supabase.from('contacts').upsert(contactsToInsert, { onConflict: 'department,phone_number' });
+
+    // 2. Seed officers table if empty
+    const { data: officersData } = await supabase.from('officers').select('id').limit(1);
+    if (!officersData || officersData.length === 0) {
+      console.log('Seeding female officers into Supabase...');
+      const officersToInsert = DEFAULT_FEMALE_OFFICERS.map(o => ({
+        name: o.name,
+        designation: o.designation,
+        mobile: o.mobile,
+        type: 'police',
+        station: o.station,
+        district: o.district,
+        email: o.email,
+        photo_url: o.photo_url || '',
+        availability: true
+      }));
+      // Add default counsellors as type = 'counsellor' for constraint compatibility
+      DEFAULT_COUNSELLORS.forEach(c => {
+        officersToInsert.push({
+          name: c.name,
+          designation: c.designation,
+          mobile: c.mobile,
+          type: 'counsellor',
+          station: c.police_station,
+          district: c.district,
+          email: c.email,
+          photo_url: '',
+          availability: c.availability
+        });
+      });
+      await supabase.from('officers').insert(officersToInsert);
+    }
+
+    // 3. Seed counsellors table if empty
+    const { data: counsellorsData } = await supabase.from('counsellors').select('id').limit(1);
+    if (!counsellorsData || counsellorsData.length === 0) {
+      console.log('Seeding counsellors into Supabase...');
+      const counsellorsToInsert = DEFAULT_COUNSELLORS.map(c => ({
+        name: c.name,
+        designation: c.designation,
+        mobile: c.mobile,
+        email: c.email,
+        district: c.district,
+        police_station: c.police_station,
+        availability: c.availability,
+        status: c.status
+      }));
+      await supabase.from('counsellors').insert(counsellorsToInsert);
+    }
+  } catch (err) {
+    console.error('Seeding database error:', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   seedSimulatorIfNeeded();
+  if (isSupabaseConfigured) {
+    await seedDatabaseIfNeeded();
+  }
   initMobileUx();
   applyLanguage();
   switchTab('shakti');

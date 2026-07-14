@@ -67,16 +67,141 @@ nav a.active{color:var(--gold2)}
 .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 
 /* EMERGENCY BAR */
-.emergency-bar{background:#fff2f6;border-top:1px solid #ffd0e0;border-bottom:1px solid #ffd0e0;padding:10px 24px}
-.emergency-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.emer-label{font-size:10px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.emergency-bar{background:#fff2f6;border-top:1px solid #ffd0e0;border-bottom:1px solid #ffd0e0;padding:16px 24px}
+.emergency-inner{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.emer-label{font-size:11px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:1px;white-space:nowrap;display:flex;align-items:center;gap:6px;flex-shrink:0}
 .emer-label::before{content:'●';font-size:8px;animation:blink 1s infinite;color:var(--pink)}
 @keyframes blink{50%{opacity:0}}
-.emer-chips{display:flex;flex-wrap:wrap;gap:6px}
-.emer-chip{display:inline-flex;align-items:center;gap:5px;background:#fff;border:1px solid #ffd0e0;border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text);text-decoration:none;transition:all .15s}
-.emer-chip:hover{background:var(--pink);color:#fff;border-color:var(--pink)}
-.emer-chip .num{color:var(--pink);font-weight:800;font-size:12px}
-.emer-chip:hover .num{color:#ffd6e7}
+.emer-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 12px;
+  width: 100%;
+}
+.emer-chip-card {
+  display: flex;
+  background: #fff;
+  border: 1px solid #ffd0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(166, 30, 77, 0.03);
+  transition: all 0.2s ease;
+  position: relative;
+}
+.emer-chip-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(166, 30, 77, 0.1);
+  border-color: var(--pink);
+}
+.emer-chip-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: var(--text);
+  flex: 1;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.emer-chip-main:active {
+  background-color: rgba(166, 30, 77, 0.05);
+}
+.emer-chip-main .emer-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+.emer-chip-main .emer-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+.emer-chip-main .emer-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--navy);
+}
+.emer-chip-main .num {
+  font-size: 14px;
+  color: var(--pink);
+  font-weight: 800;
+}
+.emer-chip-main .emer-call-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff0f6;
+  color: var(--pink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.emer-chip-main:hover .emer-call-btn {
+  background: var(--pink);
+  color: #fff;
+}
+.emer-copy-btn {
+  border: none;
+  background: transparent;
+  border-left: 1px solid #ffd0e0;
+  padding: 0 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--muted);
+  transition: all 0.2s;
+}
+.emer-copy-btn:hover {
+  background: #fff0f6;
+  color: var(--pink);
+}
+.emer-copy-btn:active {
+  background: rgba(166, 30, 77, 0.1);
+}
+
+/* VERIFIED BADGE & OFFICER AVATARS */
+.verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #10b981;
+  background: #10b98115;
+  border: 1px solid #10b98130;
+  border-radius: 4px;
+  padding: 2px 6px;
+  text-transform: uppercase;
+  margin-top: 6px;
+  width: fit-content;
+}
+.officer-avatar-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff0f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffd0e0;
+  flex-shrink: 0;
+}
+.officer-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.officer-avatar-emoji {
+  font-size: 24px;
+}
 
 /* LAYOUT */
 .main-wrap{max-width:1200px;margin:0 auto;padding:28px 24px 60px;display:flex;gap:24px}
@@ -1745,37 +1870,8 @@ nav a:focus-visible,
     margin-bottom:10px;
   }
   .emer-chips{
-    display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:10px;
-  }
-  .emer-chip{
-    min-height:92px;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    justify-content:center;
-    gap:5px;
-    padding:12px;
-    border-radius:14px;
-    box-shadow:0 8px 20px rgba(166,30,77,.1);
-    font-size:12px;
-    line-height:1.25;
-    transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
-  }
-  .emer-chip .emer-icon{
-    font-size:19px;
-  }
-  .emer-chip .emer-title{
-    color:var(--navy);
-    font-weight:700;
-  }
-  .emer-chip .num{
-    font-size:15px;
-    font-weight:900;
-  }
-  .emer-chip:active{
-    transform:translateY(1px) scale(.98);
+    grid-template-columns:repeat(auto-fill,minmax(185px,1fr));
+    gap:8px;
   }
   .main-wrap{
     width:100%;
